@@ -393,12 +393,12 @@
         <div class="hero-section">
             <h2>Welcome to Carnatic Sangeetha Website</h2>
             <p>The extensive website where you can find everything you need to know about Carnatic Music.</p>
-            <img class="trinity-image" src="Carnatic-Trinity.JPG" alt="The Carnatic Music Trinity - Tyagaraja, Muthuswami Dikshitar, Syama Sastri">
+            <img class="trinity-image" src="Carnatic-Trinity.JPG" alt="The Carnatic Music Trinity">
         </div>
     </div>
 
     <div id="compositions" class="tab-content">
-        <input type="text" id="searchBar" class="search-box" placeholder="Try typing 'syama sastri', 'lalgudi', 'hamsadhvani'...">
+        <input type="text" id="searchBar" class="search-box" placeholder="Try typing 'shyaama shaasthri', 'laalgudi', 'hamsadhvani'...">
         <div id="directory">Loading database...</div>
         <div id="no-results" style="display: none;">No compositions match your search terms.</div>
     </div>
@@ -419,7 +419,7 @@
 
     <div id="composers" class="tab-content">
         <div id="composer-directory-view">
-            <input type="text" id="composerSearchBar" class="search-box" placeholder="Search composers (e.g. Tyagaraja, Annamacharya, Balamuralikrishna)...">
+            <input type="text" id="composerSearchBar" class="search-box" placeholder="Search composers (e.g. Thyaagaraaja, Annamaachaarya, Balamuralikrishna)...">
             <div id="composer-list-container"></div>
         </div>
 
@@ -484,6 +484,15 @@
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
             .replace(/[ṟṟ]/g, 'r')
+            .replace(/[āā]/g, 'a')
+            .replace(/[Śś]/g, 's')
+            .replace(/[īī]/g, 'i')
+            .replace(/[ūū]/g, 'u')
+            .replace(/[ēē]/g, 'e')
+            .replace(/[ōō]/g, 'o')
+            .replace(/[ḍḍ]/g, 'd')
+            .replace(/[āā]/g, 'a')
+            .replace(/[āā]/g, 'a')
             .replace(/[āā]/g, 'a')
             .toLowerCase()
             .trim();
@@ -611,19 +620,16 @@
         }
     });
 
-    // --- EXACT MAPPING TABLE FOR SPELLING VARIATIONS ---
-    // Standardizes sheet variations to the correct main composer profile.
-    // Ensure distinct composers (like Tyagaraja vs. Tiruvottriyur Tyagayya) have no overlapping aliases.
+    // --- EXACT MAPPING TABLE FOR SPELLING VARIATIONS (UPDATED WITH YOUR SHEET SPELLINGS) ---
     const composerSpellingAliases = {
-        "Tyagaraja": [
-            "tyagaraja", "thyagaraja", "thyaagaraaja", "thyaagaraja", "tyāgarāja"
+        "Thyaagaraaja": [
+            "thyaagaraaja", "thyaagaraja", "thyagaraja", "thyagaraja", "tyāgarāja"
         ],
-        "Tiruvottriyur Tyagayya": [
-            "tiruvottriyur tyagayya", "thiruvoṟṟiyūr thyāagayya", "thiruvoṟṟiyūr thyāgayya", 
-            "thyāagayya", "thyāgayya", "thiruvottriyur thyagayya"
+        "Thiruvoṟṟiyūr Thyāagayya": [
+            "thiruvoṟṟiyūr thyāagayya", "thiruvoṟṟiyūr thyāgayya", "thyāagayya", "thyāgayya", "tiruvottriyur tyagayya", "thiruvottriyur thyagayya"
         ],
-        "Muthuswami Dikshitar": [
-            "muthuswami dikshitar", "muthuswaami dikshithar", "muthuswaami dikshitar", "muthuswami dikshithar"
+        "Muthuswaami Dikshithar": [
+            "muthuswaami dikshithar", "muthuswami dikshitar", "muthuswaami dikshitar", "muthuswami dikshithar"
         ],
         "Ramaswami Dikshitar": [
             "ramaswami dikshitar", "ramaswaami dikshithar", "ramaswami dikshithar"
@@ -631,89 +637,85 @@
         "Subbarama Dikshitar": [
             "subbarama dikshitar", "subbarama dikshithar", "subbaraama dikshithar"
         ],
-        "Sadasiva Brahmendra": [
-            "sadasiva brahmendra", "sadashiva brahmendra", "sadaasiva brahmendra"
+        "Sadashiva Brahmendra": [
+            "sadashiva brahmendra", "sadasiva brahmendra", "sadaasiva brahmendra"
         ],
-        "G. N. Balasubramaniam": [
-            "g.n. balasubramaniam", "gn balasubramanian", "g.n balasubramaniam", "g.n. balasubramanyam", "g.n balasubramanian"
+        "GN Balasubramanian": [
+            "gn balasubramanian", "g.n. balasubramaniam", "g.n balasubramaniam", "g.n. balasubramanyam", "g.n balasubramanian"
         ],
-        "Tallapaka Annamacharya": [
-            "tallapaka annamacharya", "annamaachaarya", "annamacharya", "annamaacharya/purandaradaasa"
+        "Annamaachaarya": [
+            "annamaachaarya", "tallapaka annamacharya", "annamacharya", "annamaachaarya/purandaradaasa"
         ],
-        "Bhadrachala Ramadasu": [
-            "bhadrachala ramadasu", "bhadrachala ramadasa", "bhadraachala raama daasu"
+        "Bhadrachala Ramadasa": [
+            "bhadrachala ramadasa", "bhadrachala ramadasu", "bhadraachala raama daasu"
         ],
-        "Purandaradasa": [
-            "purandaradaasa", "purandara dasa", "purandaradaasa/annamaachaarya", "annamaachaarya/purandaradaasa"
+        "Purandaradaasa": [
+            "purandaradaasa", "purandaradasa", "purandara dasa", "purandaradaasa/annamaachaarya", "annamaachaarya/purandaradaasa"
         ],
-        "Narayana Teertha": [
-            "narayana teertha", "narayanatheertha", "narayana tirtha"
+        "Narayanatheertha": [
+            "narayanatheertha", "narayana teertha", "narayana tirtha"
         ],
-        "Paidala Gurumurti Sastri": [
-            "paidala gurumurti sastri", "paidala gurumurti shastri", "gurumurti sastri"
+        "Paidala Gurumurti Shastri": [
+            "paidala gurumurti shastri", "paidala gurumurti sastri", "gurumurti sastri"
         ],
-        "Swathi Thirunal": [
-            "swathi thirunal", "maharaaja swathi thirunal raama varma", "swathi thirunal rama varma", "maharaaja swathi thirunal"
+        "Maharaaja Swaathi Thirunal Raama Varma": [
+            "maharaaja swathi thirunal raama varma", "swathi thirunal", "swathi thirunal rama varma", "maharaaja swathi thirunal"
         ],
-        "Oottukkadu Venkata Kavi": [
-            "oottukkadu venkata kavi", "ootthukaadu ventaka subbaiyyer", "ootthukkadu venkata kavi", "ootthukaadu venkata subbayer"
+        "Ootthukaadu Ventaka Subbaiyyer": [
+            "ootthukaadu ventaka subbaiyyer", "oottukkadu venkata kavi", "ootthukkadu venkata kavi", "ootthukaadu venkata subbayer"
         ],
-        "Syama Sastri": [
-            "syama sastri", "shyaama shaasthri", "shyaama shaashtri", "shyama shastri"
+        "Shyaama Shaasthri": [
+            "shyaama shaasthri", "syama sastri", "shyaama shaashtri", "shyama shastri"
         ],
-        "Veena Kuppayyar": [
-            "veena kuppayyar", "veenai kuppayyar"
+        "Veenai Kuppayyar": [
+            "veenai kuppayyar", "veena kuppayyar"
         ],
-        "Manambuchavadi Venkatasubbayyar": [
-            "manambuchavadi venkatasubbayyar", "mānambuccāvaḍi venkaṭa subbayyar", "manambuccavadi venkata subbayyar"
+        "Mānambuccāvaḍi Venkaṭa Subbayyar": [
+            "mānambuccāvaḍi venkaṭa subbayyar", "manambuchavadi venkatasubbayyar", "manambuccavadi venkata subbayyar"
         ],
-        "Patnam Subramania Iyer": [
-            "patnam subramania iyer", "patnam subramanyam iyer", "patnam subramaniam iyer"
+        "Patnam Subramanyam Iyer": [
+            "patnam subramanyam iyer", "patnam subramania iyer", "patnam subramaniam iyer"
         ],
-        "Kotthavaasal Venkatarama Ayyar": [
-            "kotthavaasal venkatarama ayyar", "kottavāsal venkatarāmaiyer", "kottavasal venkataramaiyer"
+        "Kottavāsal Venkatarāmaiyer": [
+            "kottavāsal venkatarāmaiyer", "kotthavaasal venkatarama ayyar", "kottavasal venkataramaiyer"
         ],
-        "Pacchimiriam Adiyappa": [
-            "pacchimiriam adiyappa", "pacchimariyam addiyappa"
+        "Pacchimariyam Addiyappa": [
+            "pacchimariyam addiyappa", "pacchimiriam adiyappa"
         ],
-        "Lalgudi Jayaraman": [
-            "lalgudi jayararaman", "laalgudi jayaraman", "lalgudi jayaraman"
+        "Laalgudi Jayaraman": [
+            "laalgudi jayaraman", "lalgudi jayararaman", "lalgudi jayaraman"
         ],
-        "Muthiah Bhagavatar": [
-            "muthiah bhagavatar", "mutthiah bhaagavathar", "muthiah bhaagavathar"
+        "Mutthiah Bhaagavathar": [
+            "mutthiah bhaagavathar", "muthiah bhagavatar", "muthiah bhaagavathar"
         ],
-        "Tiger Varadachariar": [
-            "tiger varadachariar", "tiger varadhacharier"
+        "Tiger Varadhacharier": [
+            "tiger varadhacharier", "tiger varadachariar"
         ],
-        "Kanakadasa": [
-            "kanakadasa", "kanakadaasa"
+        "Kanakadaasa": [
+            "kanakadaasa", "kanakadasa"
         ],
-        "Papanasam Sivan": [
-            "papanasam sivan", "paapanasham shivan"
+        "Paapanasham Shivan": [
+            "paapanasham shivan", "papanasam sivan"
         ],
-        "Mysore Vasudevacharya": [
-            "mysore vasudevacharya", "mysore vaasudevacharya"
+        "Mysore Vaasudevacharya": [
+            "mysore vaasudevacharya", "mysore vasudevacharya"
         ],
-        "Mayuram Viswanatha Sastri": [
-            "mayuram viswanatha sastri", "mayooram vishvanaatha shasthri"
+        "Mayooram Vishvanaatha Shasthri": [
+            "mayooram vishvanaatha shasthri", "mayuram viswanatha sastri"
         ]
     };
 
     // --- STRICT COMPOSER MATCHING LOGIC ---
-    // Normalizes strings by stripping diacritics and matches strictly (no loose substrings).
     function isComposerMatch(sheetComposerName, mainComposerName) {
         if (!sheetComposerName) return false;
         
-        // Clean both strings completely (lowercase, strip diacritics like ā -> a, ṟ -> r)
         const cleanSheet = cleanDiacritics(sheetComposerName);
         const cleanMain = cleanDiacritics(mainComposerName);
         
-        // 1. Check for exact match after cleaning
         if (cleanSheet === cleanMain) {
             return true;
         }
         
-        // 2. Check for exact matches inside the specific alias list for this composer
         const aliases = composerSpellingAliases[mainComposerName];
         if (aliases) {
             return aliases.some(alias => cleanDiacritics(alias) === cleanSheet);
@@ -722,9 +724,16 @@
         return false;
     }
 
-    // Comprehensive Eras-based Composers Database
+    // Comprehensive Eras-based Composers Database (NAMES UPDATED TO MATCH G-SHEET EXACTLY)
     const composersDb = [
         // PRE-TRINITY
+        {
+            name: "Aadhi Shankaracharya",
+            timeline: "8th century",
+            era: "Pre-Trinity Era composers (17th century and prior)",
+            eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
+            bio: "Renowned philosopher and theologian who consolidated the doctrine of Advaita Vedanta and composed brilliant devotional hymns."
+        },
         {
             name: "Allama Prabhu",
             timeline: "12th century",
@@ -754,7 +763,7 @@
             bio: "Renowned for Thiruppugazh, with its exceptionally complex, rhythmic structures."
         },
         {
-            name: "Bhadrachala Ramadasu",
+            name: "Bhadrachala Ramadasa",
             timeline: "1620 – 1688",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
@@ -768,7 +777,7 @@
             bio: "Illustrious Sanskrit poet who composed the legendary 'Gita Govinda'."
         },
         {
-            name: "Kanakadasa",
+            name: "Kanakadaasa",
             timeline: "1509 – 1609",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
@@ -817,7 +826,7 @@
             bio: "Early direct disciple of Madhwacharya who pioneered Haridasa songs in Kannada."
         },
         {
-            name: "Narayana Teertha",
+            name: "Narayanatheertha",
             timeline: "1650 – 1725",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
@@ -838,14 +847,14 @@
             bio: "Early Tamil Carnatic composer, remembered for the Nindastuti genre."
         },
         {
-            name: "Paidala Gurumurti Sastri",
+            name: "Paidala Gurumurti Shastri",
             timeline: "17th century",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
             bio: "Towering 17th-century musicologist who composed over 1,000 pedagogic geethams."
         },
         {
-            name: "Purandaradasa",
+            name: "Purandaradaasa",
             timeline: "1484 – 1564",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
@@ -887,7 +896,7 @@
             bio: "Also known as Appar, he wrote profound hymns set to ancient pan and raga frameworks."
         },
         {
-            name: "Tallapaka Annamacharya",
+            name: "Annamaachaarya",
             timeline: "1408 – 1503",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
@@ -901,7 +910,7 @@
             bio: "Haridasa saint who composed under 'Hayavadana' in both Kannada and Sanskrit."
         },
         {
-            name: "Vijaya Dasa",
+            name: "Vijayadasa",
             timeline: "1682 – 1755",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
@@ -973,7 +982,7 @@
             bio: "Pivotal Tamil composer who established the pre-Trinity Tamil musical framework."
         },
         {
-            name: "Muthuswami Dikshitar",
+            name: "Muthuswaami Dikshithar",
             timeline: "1775 – 1835",
             era: "Trinity Era Composers (18th Century)",
             eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
@@ -987,28 +996,28 @@
             bio: "Mysore court musician who composed highly artistic, detailed Sanskrit and Telugu krithis."
         },
         {
-            name: "Oottukkadu Venkata Kavi",
+            name: "Ootthukaadu Ventaka Subbaiyyer",
             timeline: "1700 – 1765",
             era: "Trinity Era Composers (18th Century)",
             eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
             bio: "A compositional genius who pioneered Kamakshi Navavarana cycles with intricate rhythm structures."
         },
         {
-            name: "Pacchimiriam Adiyappa",
+            name: "Pacchimariyam Addiyappa",
             timeline: "early 18th century",
             era: "Trinity Era Composers (18th Century)",
             eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
             bio: "Creator of the legendary Bhairavi Ata Tala Varnam, 'Viriboni', the absolute benchmark of varnams."
         },
         {
-            name: "Sadasiva Brahmendra",
+            name: "Sadashiva Brahmendra",
             timeline: "18th century",
             era: "Trinity Era Composers (18th Century)",
             eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
             bio: "Advaita saint who composed contemplative Sanskrit songs like 'Manasa Sanchara Re'."
         },
         {
-            name: "Tyagaraja",
+            name: "Thyaagaraaja",
             timeline: "1767 – 1847",
             era: "Trinity Era Composers (18th Century)",
             eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
@@ -1036,14 +1045,14 @@
             bio: "Father of Muthuswami Dikshitar, who structured and invented the beautiful raga Hamsadhvani."
         },
         {
-            name: "Swathi Thirunal",
+            name: "Maharaaja Swaathi Thirunal Raama Varma",
             timeline: "1813 – 1846",
             era: "Trinity Era Composers (18th Century)",
             eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
             bio: "Maharaja of Travancore. Composed over 400 pieces spanning 7 languages with immense grace."
         },
         {
-            name: "Syama Sastri",
+            name: "Shyaama Shaasthri",
             timeline: "1762 – 1827",
             era: "Trinity Era Composers (18th Century)",
             eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
@@ -1129,7 +1138,7 @@
             bio: "A genius who composed outstanding Tamil krithis across **all 72 Melakarta ragas**."
         },
         {
-            name: "Kotthavaasal Venkatarama Ayyar",
+            name: "Kottavāsal Venkatarāmaiyer",
             timeline: "1810 – 1880",
             era: "Post-Trinity Era composers (19th century)",
             eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
@@ -1143,21 +1152,21 @@
             bio: "Composed the massive **'Mela raga maalika'** covering all 72 primary ragas continuously."
         },
         {
-            name: "Manambuchavadi Venkatasubbayyar",
+            name: "Mānambuccāvaḍi Venkaṭa Subbayyar",
             timeline: "19th century",
             era: "Post-Trinity Era composers (19th century)",
             eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
             bio: "A direct disciple of Tyagaraja who trained several giants of the post-Trinity era."
         },
         {
-            name: "Mayuram Viswanatha Sastri",
+            name: "Mayooram Vishvanaatha Shasthri",
             timeline: "1893 – 1958",
             era: "Post-Trinity Era composers (19th century)",
             eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
             bio: "Composed 'Murugan Madhura Kirtanai' alongside patriotic songs."
         },
         {
-            name: "Muthiah Bhagavatar",
+            name: "Mutthiah Bhaagavathar",
             timeline: "1877 – 1945",
             era: "Post-Trinity Era composers (19th century)",
             eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
@@ -1171,7 +1180,7 @@
             bio: "Legendary violinist and composer who invented the unique seven-stringed violin."
         },
         {
-            name: "Mysore Vasudevacharya",
+            name: "Mysore Vaasudevacharya",
             timeline: "1865 – 1961",
             era: "Post-Trinity Era composers (19th century)",
             eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
@@ -1192,14 +1201,14 @@
             bio: "Disciple of Neykarapatti Subba Iyer, famed for intricate Pallavi structures."
         },
         {
-            name: "Papanasam Sivan",
+            name: "Paapanasham Shivan",
             timeline: "1890 – 1973",
             era: "Post-Trinity Era composers (19th century)",
             eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
             bio: "Commonly praised as the **'Tamil Tyagaraja'** with over 500 deeply emotional kritis."
         },
         {
-            name: "Patnam Subramania Iyer",
+            name: "Patnam Subramanyam Iyer",
             timeline: "1845 – 1902",
             era: "Post-Trinity Era composers (19th century)",
             eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
@@ -1262,21 +1271,21 @@
             bio: "Four brothers who codified Bharatanatyam and composed various padams and varnams."
         },
         {
-            name: "Tiger Varadachariar",
+            name: "Tiger Varadhacharier",
             timeline: "1876 – 1950",
             era: "Post-Trinity Era composers (19th century)",
             eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
             bio: "Extraordinary pedagogue who headed key institutional music departments."
         },
         {
-            name: "Tiruvottriyur Tyagayya",
+            name: "Thiruvoṟṟiyūr Thyāagayya",
             timeline: "1845 – 1917",
             era: "Post-Trinity Era composers (19th century)",
             eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
             bio: "Son of Veena Kuppayya, who composed masterly varnams and kritis."
         },
         {
-            name: "Veena Kuppayyar",
+            name: "Veenai Kuppayyar",
             timeline: "1798 – 1860",
             era: "Post-Trinity Era composers (19th century)",
             eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
@@ -1313,7 +1322,7 @@
             bio: "Veteran violinist and composer who added valuable pedagogical layers."
         },
         {
-            name: "G. N. Balasubramaniam",
+            name: "GN Balasubramanian",
             timeline: "1910 – 1965",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
@@ -1334,7 +1343,7 @@
             bio: "Contributed highly structured, pedagogical modern Carnatic works."
         },
         {
-            name: "Lalgudi Jayaraman",
+            name: "Laalgudi Jayaraman",
             timeline: "1930 – 2013",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
@@ -1369,7 +1378,7 @@
             bio: "Chitravina maestro who composed classical works in **all 35 Sulaadi talas**."
         },
         {
-            name: "N. S. Ramachandran",
+            name: "NS Raamachandran",
             timeline: "1908 – 1981",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
