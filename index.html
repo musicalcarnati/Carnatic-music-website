@@ -85,7 +85,7 @@
             box-sizing: border-box;
         }
 
-        /* Views management (showing/hiding tabs) */
+        /* Views management */
         .tab-content {
             display: none;
         }
@@ -384,18 +384,25 @@
         if (!text) return '';
         let normalized = text.toString().toLowerCase();
         
+        // 1. Remove diacritics (e.g., ā -> a, ṟ -> r)
         normalized = normalized.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         normalized = normalized.replace(/[ṟṟ]/g, 'r').replace(/[āā]/g, 'a');
 
+        // 2. Harmonize double 'aa' to single 'a' to handle Lalgudi/Laalgudi, Aadhi/Adi, Raaga/Raga, etc.
+        normalized = normalized.replace(/aa/g, 'a');
+
+        // 3. Harmonize other common variations
         normalized = normalized.replace(/hamsadhwani/g, 'hamsadhvani');
         normalized = normalized.replace(/shyaama/g, 'syama');
         normalized = normalized.replace(/shaasthri/g, 'sastri');
         normalized = normalized.replace(/shastri/g, 'sastri');
+        
+        // Simplify spellings of major composers/terms for comparison
         normalized = normalized.replace(/thyaagaraaja/g, 'tyagaraja');
         normalized = normalized.replace(/thyaagaraja/g, 'tyagaraja');
         normalized = normalized.replace(/thyāagayya/g, 'thyagayya');
-        normalized = normalized.replace(/aadhi/g, 'adi');
-        normalized = normalized.replace(/aadi/g, 'adi');
+        normalized = normalized.replace(/thyagayya/g, 'tyagayya'); 
+        normalized = normalized.replace(/th/g, 't'); // handles the "th" vs "t" spelling variations globally
         
         return normalized.trim();
     }
