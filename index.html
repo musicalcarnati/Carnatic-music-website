@@ -497,9 +497,9 @@
             const language = (krithi.Lanaguage && krithi.Lanaguage !== 'NA') ? krithi.Lanaguage : 'N/A';
             const type = krithi.Type || 'Composition';
 
-            // Safe fetch values from standard and newly added columns
+            // Safe fetch values supporting both spacing variations
             const notationLink = krithi.Notation ? krithi.Notation.trim() : '';
-            const detailedLink = krithi.DetailedNotation ? krithi.DetailedNotation.trim() : '';
+            const detailedLink = (krithi['Detailed Notation'] || krithi.DetailedNotation || '').trim();
             const lyricsLink = krithi.Lyrics ? krithi.Lyrics.trim() : '';
 
             // Generate HTML for buttons dynamically based on what data is present in the row
