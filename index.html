@@ -273,6 +273,37 @@
             font-size: 18px;
         }
 
+        /* Composers Tab Specific Card Styles */
+        .composer-card {
+            background: var(--card-bg);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+            border-left: 6px solid var(--secondary-color);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .composer-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+            border-left-color: var(--primary-color);
+        }
+
+        .composer-card-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0 0 5px 0;
+        }
+
+        .composer-card-years {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
         /* Blank Placeholder Tab Styles */
         .placeholder-tab {
             background: var(--card-bg);
@@ -371,9 +402,21 @@
     </div>
 
     <div id="composers" class="tab-content">
-        <div class="placeholder-tab">
-            <h2>Composers</h2>
-            <p>Dashboard View: This page is ready to show profiles and biographies of legends.</p>
+        <div id="composer-directory-view">
+            <input type="text" id="composerSearchBar" class="search-box" placeholder="Search composers (e.g. Tyagaraja, Papanasam Sivan, Swathi Thirunal)...">
+            <div id="composer-list"></div>
+        </div>
+
+        <div id="composer-detail-view" style="display: none;">
+            <button onclick="backToComposerList()" style="background: var(--secondary-color); color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 20px;">← Back to Composers</button>
+            <div class="hero-section" style="text-align: left;">
+                <h2 id="detail-composer-name" style="margin-bottom: 5px;"></h2>
+                <p id="detail-composer-timeline" style="font-style: italic; color: #666; margin-top: 0;"></p>
+                <div id="detail-composer-bio" style="font-size: 16px; line-height: 1.6; color: #333; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 15px;"></div>
+                
+                <h3 style="color: var(--primary-color); margin-top: 30px; border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">Compositions on This Website</h3>
+                <div id="detail-composer-songs" style="margin-top: 15px;"></div>
+            </div>
         </div>
     </div>
 
@@ -556,6 +599,123 @@
             displayKrithis(matchingKrithis);
         }
     });
+
+    // Composers Database containing Biographies and Timelines
+    const composersDb = [
+        {
+            name: "Tyagaraja",
+            timeline: "1767 – 1847",
+            bio: "Saint Tyagaraja is the most celebrated among the Trinity of Carnatic Music. Born in Tiruvarur, he composed thousands of devotional kritis, mostly in Telugu and in praise of Lord Rama. He popularized the 'Sangatani' (melodic variations) structure, and is famous for composing the legendary Ghanaraga Pancharatna Kritis."
+        },
+        {
+            name: "Muthuswami Dikshitar",
+            timeline: "1775 – 1835",
+            bio: "Muthuswami Dikshitar is the youngest of the Carnatic Music Trinity. His compositions, written primarily in Sanskrit, are known for their grand, majestic pace (Chowka Kala), elaborate descriptions of temples/deities, usage of the Veena-style gamakas, and the inclusion of 'Raga Mudra' (embedding the raga name in the lyric)."
+        },
+        {
+            name: "Syama Sastri",
+            timeline: "1762 – 1827",
+            bio: "Syama Sastri is the eldest of the Trinity. Coming from a family of priests at the Bangaru Kamakshi Temple in Thanjavur, his compositions are primarily in Telugu and Sanskrit devoted to Goddess Kamakshi. He is widely celebrated for his masterly grip on complex rhythmic structures (Tala), swarajatis, and his exquisite use of Misra Chapu tala."
+        },
+        {
+            name: "Swathi Thirunal",
+            timeline: "1813 – 1846",
+            bio: "Maharaja Swathi Thirunal Rama Varma was the king of the princely state of Travancore. A brilliant polyglot and composer, he penned over 400 compositions in Sanskrit, Malayalam, Telugu, Kannada, Tamil, Hindi, and Braj Bhasha, beautifully blending both Carnatic and Hindustani musical systems."
+        },
+        {
+            name: "Papanasam Sivan",
+            timeline: "1890 – 1973",
+            bio: "Often praised as the 'Tamil Tyagaraja', Papanasam Sivan was a prolific 20th-century composer and singer. He composed over 500 devotional songs, mostly in Tamil, rich in Bhava (emotion). He was highly instrumental in bridging classical music with devotional congregational singing and early Tamil cinema."
+        },
+        {
+            name: "Lalgudi Jayaraman",
+            timeline: "1930 – 2013",
+            bio: "Lalgudi G. Jayaraman was a legendary Carnatic violinist, vocalist, and composer. Renowned for his unique style (Lalgudi Bani), he composed incredibly popular Varnams and Tillanas that are staples in both Carnatic music concerts and Bharatanatyam dance performances today."
+        }
+    ];
+
+    let composerFuse = new Fuse(composersDb, {
+        keys: ['name', 'bio'],
+        threshold: 0.4
+    });
+
+    // Render the list of composers
+    function displayComposers(data) {
+        const container = document.getElementById('composer-list');
+        container.innerHTML = '';
+        
+        data.forEach(composer => {
+            const card = document.createElement('div');
+            card.className = 'composer-card';
+            card.onclick = () => showComposerProfile(composer);
+            card.innerHTML = `
+                <div class="composer-card-title">${composer.name}</div>
+                <div class="composer-card-years">${composer.timeline}</div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // Show Composer profile, match and display their compositions dynamically
+    function showComposerProfile(composer) {
+        document.getElementById('composer-directory-view').style.display = 'none';
+        document.getElementById('composer-detail-view').style.display = 'block';
+
+        document.getElementById('detail-composer-name').innerText = composer.name;
+        document.getElementById('detail-composer-timeline').innerText = composer.timeline;
+        document.getElementById('detail-composer-bio').innerText = composer.bio;
+
+        // Automatically match songs from your Google Sheets data!
+        const songContainer = document.getElementById('detail-composer-songs');
+        songContainer.innerHTML = '';
+
+        // Case-insensitive matching for the composer's name
+        const matchedSongs = krithis.filter(song => 
+            song.Composer && song.Composer.toLowerCase().includes(composer.name.toLowerCase())
+        );
+
+        if (matchedSongs.length === 0) {
+            songContainer.innerHTML = '<p class="coming-soon-text">No compositions loaded in the database for this composer yet.</p>';
+        } else {
+            matchedSongs.forEach(song => {
+                const songLink = document.createElement('div');
+                songLink.style.cssText = "background: #fdfaf4; padding: 10px 15px; margin-bottom: 8px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; cursor: pointer;";
+                songLink.innerHTML = `
+                    <span style="font-weight: 500; color: var(--primary-color);">${song.Name}</span>
+                    <span style="font-size: 13px; color: #666;">Raaga: ${song.Raaga || 'N/A'}</span>
+                `;
+                // Clicking the song jumps the user to the Compositions tab and runs the search for that song!
+                songLink.onclick = () => {
+                    switchTab('compositions');
+                    const searchBar = document.getElementById('searchBar');
+                    searchBar.value = song.Name;
+                    // Trigger search manually
+                    searchBar.dispatchEvent(new Event('input'));
+                };
+                songContainer.appendChild(songLink);
+            });
+        }
+    }
+
+    // Go back to the list
+    function backToComposerList() {
+        document.getElementById('composer-detail-view').style.display = 'none';
+        document.getElementById('composer-directory-view').style.display = 'block';
+    }
+
+    // Bind composer search input
+    document.getElementById('composerSearchBar').addEventListener('input', function(e) {
+        const query = e.target.value.trim();
+        if (!query) {
+            displayComposers(composersDb);
+            return;
+        }
+        const results = composerFuse.search(query).map(r => r.item);
+        displayComposers(results);
+    });
+
+    // Initialize list on load
+    displayComposers(composersDb);
 
     // Run database fetch
     loadData();
