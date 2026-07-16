@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XXX - Carnatic Music Portal</title>
+    <title>Carnatic Sangeetha Website</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
     <style>
@@ -286,7 +286,7 @@
 
 <header>
     <div class="header-container">
-        <div class="logo" id="home-logo-btn" style="cursor: pointer;" onclick="switchTab('home')">XXX</div>
+        <div class="logo" id="home-logo-btn" style="cursor: pointer;" onclick="switchTab('home')">Carnatic Sangeetha Website</div>
         <nav>
             <button class="nav-btn active" id="btn-home" onclick="switchTab('home')">Home</button>
             <button class="nav-btn" id="btn-compositions" onclick="switchTab('compositions')">Compositions</button>
@@ -303,9 +303,9 @@
 
     <div id="home" class="tab-content active">
         <div class="hero-section">
-            <h2>Welcome to XXX</h2>
+            <h2>Welcome to Carnatic Sangeetha Website</h2>
             <p>The extensive website where you can find everything you need to know about Carnatic Music.</p>
-            <img class="trinity-image" src="Carnatic Trinity.JPG" alt="The Carnatic Music Trinity - Tyagaraja, Muthuswami Dikshitar, Syama Sastri">
+            <img class="trinity-image" src="Carnatic-Trinity.JPG" alt="The Carnatic Music Trinity - Tyagaraja, Muthuswami Dikshitar, Syama Sastri">
         </div>
     </div>
 
@@ -394,10 +394,8 @@
             download: true,
             header: true,
             complete: function(results) {
-                // Keep valid rows
                 krithis = results.data.filter(row => row.Name);
                 
-                // Initialize the intelligent Fuzzy Matcher (Fuse.js)
                 const searchKeys = [
                     { name: 'cleanName', weight: 0.35 },
                     { name: 'cleanComposer', weight: 0.25 },
@@ -408,7 +406,6 @@
                     { name: 'cleanType', weight: 0.05 }
                 ];
 
-                // Map database to clean, standardized search entries behind the scenes
                 const searchableData = krithis.map(item => ({
                     ...item,
                     cleanName: cleanDiacritics(item.Name),
@@ -422,8 +419,8 @@
 
                 fuseInstance = new Fuse(searchableData, {
                     keys: searchKeys,
-                    threshold: 0.45,       // Determines "fuzziness" (0 = exact match, 1 = matches everything). 0.45 is perfect for phonetic typos.
-                    ignoreLocation: true,  // Find matches anywhere inside strings
+                    threshold: 0.45,       
+                    ignoreLocation: true,  
                     distance: 100
                 });
 
@@ -480,7 +477,7 @@
         const query = e.target.value.trim();
         
         if (!query) {
-            displayKrithis(krithis); // Show all records if search box is empty
+            displayKrithis(krithis); 
             return;
         }
 
