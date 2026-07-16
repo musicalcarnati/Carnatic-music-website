@@ -320,19 +320,61 @@
             font-weight: 500;
         }
 
-        /* Blank Placeholder Tab Styles */
-        .placeholder-tab {
-            background: var(--card-bg);
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            border: 1px solid var(--border-color);
+        /* Dynamic Google Docs Reader Interface Styles */
+        .doc-control-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
-        .placeholder-tab h2 {
-            color: var(--primary-color);
-            margin-top: 0;
+        .doc-btn {
+            background-color: var(--card-bg);
+            color: var(--text-dark);
+            border: 2px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .doc-btn:hover {
+            background-color: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        .doc-btn.active-doc {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 8px rgba(128,43,0,0.15);
+        }
+
+        .reader-wrapper {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            overflow: hidden;
+        }
+
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            height: 700px; /* Generous reading space */
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
 
         /* Responsive design */
@@ -348,6 +390,9 @@
             .nav-btn {
                 font-size: 13px;
                 padding: 8px 10px;
+            }
+            .iframe-container {
+                height: 500px; /* Slightly shorter on mobile screens */
             }
         }
 
@@ -404,16 +449,29 @@
     </div>
 
     <div id="courses" class="tab-content">
-        <div class="placeholder-tab">
-            <h2>Courses</h2>
-            <p>Dashboard View: This page is ready for custom layouts when courses are published.</p>
+        <div class="doc-control-bar" id="courses-control-bar">
+            <button class="doc-btn active-doc" onclick="switchDoc('courses', 'course-details', this)">Course Details</button>
+            <button class="doc-btn" onclick="switchDoc('courses', 'exams-info', this)">Exams & Assessments</button>
+            <button class="doc-btn" onclick="switchDoc('courses', 'performance-guide', this)">Performance Class</button>
+        </div>
+        <div class="reader-wrapper">
+            <div class="iframe-container">
+                <iframe id="courses-iframe" src=""></iframe>
+            </div>
         </div>
     </div>
 
     <div id="syllabus" class="tab-content">
-        <div class="placeholder-tab">
-            <h2>Syllabus</h2>
-            <p>Dashboard View: This page is ready to structure exams, performance guides, or lesson paths.</p>
+        <div class="doc-control-bar" id="syllabus-control-bar">
+            <button class="doc-btn active-doc" onclick="switchDoc('syllabus', 'grade-1', this)">Grade 1 Syllabus</button>
+            <button class="doc-btn" onclick="switchDoc('syllabus', 'grade-2', this)">Grade 2 Syllabus</button>
+            <button class="doc-btn" onclick="switchDoc('syllabus', 'grade-3', this)">Grade 3 Syllabus</button>
+            <button class="doc-btn" onclick="switchDoc('syllabus', 'overall', this)">Overall Syllabus</button>
+        </div>
+        <div class="reader-wrapper">
+            <div class="iframe-container">
+                <iframe id="syllabus-iframe" src=""></iframe>
+            </div>
         </div>
     </div>
 
@@ -444,9 +502,15 @@
     </div>
 
     <div id="theory" class="tab-content">
-        <div class="placeholder-tab">
-            <h2>Theory</h2>
-            <p>Dashboard View: This page is ready for articles, lakshana grandhas, and analytical details.</p>
+        <div class="doc-control-bar" id="theory-control-bar">
+            <button class="doc-btn active-doc" onclick="switchDoc('theory', 'intro-carnatic', this)">Intro to Carnatic</button>
+            <button class="doc-btn" onclick="switchDoc('theory', 'laya-tala', this)">Laya & Tala Systems</button>
+            <button class="doc-btn" onclick="switchDoc('theory', 'lakshana-granthas', this)">Lakshana Granthas</button>
+        </div>
+        <div class="reader-wrapper">
+            <div class="iframe-container">
+                <iframe id="theory-iframe" src=""></iframe>
+            </div>
         </div>
     </div>
 
@@ -470,7 +534,62 @@
         if (targetButton) {
             targetButton.classList.add('active');
         }
+
+        // Initialize first default iframe doc when entering a tab to make sure it loads cleanly
+        if (tabId === 'syllabus') {
+            initDefaultDoc('syllabus', 'grade-1');
+        } else if (tabId === 'courses') {
+            initDefaultDoc('courses', 'course-details');
+        } else if (tabId === 'theory') {
+            initDefaultDoc('theory', 'intro-carnatic');
+        }
     }
+
+    // --- GOOGLE DOCS CMS INTEGRATION CONFIGURATION ---
+    // PASTE YOUR PUBLISHED GOOGLE DOC LINKS HERE:
+    const googleDocUrls = {
+        syllabus: {
+            'grade-1': 'https://docs.google.com/document/d/e/2PACX-1vT-PLACEHOLDER-GRADE-1/pub?embedded=true',
+            'grade-2': 'https://docs.google.com/document/d/e/2PACX-1vT-PLACEHOLDER-GRADE-2/pub?embedded=true',
+            'grade-3': 'https://docs.google.com/document/d/e/2PACX-1vT-PLACEHOLDER-GRADE-3/pub?embedded=true',
+            'overall': 'https://docs.google.com/document/d/e/2PACX-1vT-PLACEHOLDER-OVERALL/pub?embedded=true'
+        },
+        courses: {
+            'course-details': 'https://docs.google.com/document/d/e/2PACX-1vT-PLACEHOLDER-DETAILS/pub?embedded=true',
+            'exams-info': 'https://docs.google.com/document/d/e/2PACX-1vT-PLACEHOLDER-EXAMS/pub?embedded=true',
+            'performance-guide': 'https://docs.google.com/document/d/e/2PACX-1vT-PLACEHOLDER-PERFORMANCE/pub?embedded=true'
+        },
+        theory: {
+            'intro-carnatic': 'https://docs.google.com/document/d/e/2PACX-1vT-PLACEHOLDER-THEORY1/pub?embedded=true',
+            'laya-tala': 'https://docs.google.com/document/d/e/2PACX-1vT-PLACEHOLDER-THEORY2/pub?embedded=true',
+            'lakshana-granthas': 'https://docs.google.com/document/d/e/2PACX-1vT-PLACEHOLDER-THEORY3/pub?embedded=true'
+        }
+    };
+
+    // Swaps iframe URLs dynamically
+    function switchDoc(tabKey, docKey, btnElement) {
+        const iframe = document.getElementById(`${tabKey}-iframe`);
+        if (iframe && googleDocUrls[tabKey] && googleDocUrls[tabKey][docKey]) {
+            iframe.src = googleDocUrls[tabKey][docKey];
+        }
+
+        // Keep active styling of the clicked button
+        const controlBar = document.getElementById(`${tabKey}-control-bar`);
+        const buttons = controlBar.querySelectorAll('.doc-btn');
+        buttons.forEach(btn => btn.classList.remove('active-doc'));
+        if (btnElement) {
+            btnElement.classList.add('active-doc');
+        }
+    }
+
+    // Ensures the default document is loaded when the user opens the tab
+    function initDefaultDoc(tabKey, defaultDocKey) {
+        const iframe = document.getElementById(`${tabKey}-iframe`);
+        if (iframe && (!iframe.src || iframe.src === window.location.href)) {
+            iframe.src = googleDocUrls[tabKey][defaultDocKey];
+        }
+    }
+
 
     // Live Google Sheet Database Configuration
     const sheetCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTK6h64L1-UuFhqNq2fWM0NHlPJT-d2zEDdXLi6ZE_iRR0K2pFRb5WLzEAyjIsSLbEgkOiFHh6RNZt0/pub?output=csv'; 
@@ -491,9 +610,6 @@
             .replace(/[ēē]/g, 'e')
             .replace(/[ōō]/g, 'o')
             .replace(/[ḍḍ]/g, 'd')
-            .replace(/[āā]/g, 'a')
-            .replace(/[āā]/g, 'a')
-            .replace(/[āā]/g, 'a')
             .toLowerCase()
             .trim();
     }
@@ -724,7 +840,7 @@
         return false;
     }
 
-    // Comprehensive Eras-based Composers Database (NAMES UPDATED TO MATCH G-SHEET EXACTLY)
+    // Comprehensive Eras-based Composers Database
     const composersDb = [
         // PRE-TRINITY
         {
