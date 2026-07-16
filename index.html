@@ -493,7 +493,6 @@
         Papa.parse(sheetCsvUrl, {
             download: true,
             header: true,
-            // Clean up header fields automatically to prevent hidden space bugs
             transformHeader: function(header) {
                 return header.trim();
             },
@@ -556,12 +555,10 @@
             const language = (krithi.Lanaguage && krithi.Lanaguage !== 'NA') ? krithi.Lanaguage : 'N/A';
             const type = krithi.Type || 'Composition';
 
-            // Safe fetch values supporting both spacing variations
             const notationLink = krithi.Notation ? krithi.Notation.trim() : '';
             const detailedLink = (krithi['Detailed Notation'] || krithi.DetailedNotation || '').trim();
             const lyricsLink = krithi.Lyrics ? krithi.Lyrics.trim() : '';
 
-            // Generate HTML for buttons dynamically based on what data is present in the row
             let buttonsHTML = '';
             
             if (notationLink && notationLink !== 'NA' && notationLink !== '') {
@@ -574,7 +571,6 @@
                 buttonsHTML += `<a href="${lyricsLink}" target="_blank" class="view-btn btn-lyrics">Lyrics</a>`;
             }
 
-            // If absolutely no resources exist yet, output a tiny placeholder
             if (!buttonsHTML) {
                 buttonsHTML = '<span class="coming-soon-text">Resources coming soon</span>';
             }
@@ -599,7 +595,6 @@
         });
     }
 
-    // Intelligent fuzzy matching search event
     document.getElementById('searchBar').addEventListener('input', function(e) {
         const query = e.target.value.trim();
         
@@ -616,6 +611,55 @@
         }
     });
 
+    // --- MAPPING TABLE FOR UNEVEN AND ALTERNATIVE SPELLINGS IN GOOGLE SHEETS ---
+    // Key represents the main composer ID/Key, values represent all spelling variations on Sheets
+    const composerSpellingAliases = {
+        "Tyagaraja": ["tyagaraja", "thyagaraja", "thyaagaraaja", "thyaagaraja", "thyāagayya", "thyāgayya"],
+        "Muthuswami Dikshitar": ["muthuswami dikshitar", "muthuswaami dikshithar", "muthuswaami dikshitar", "dikshithar", "dikshitar"],
+        "Sadasiva Brahmendra": ["sadasiva brahmendra", "sadashiva brahmendra"],
+        "G. N. Balasubramaniam": ["g.n. balasubramaniam", "gn balasubramanian", "g.n balasubramaniam", "g.n. balasubramanyam"],
+        "Tallapaka Annamacharya": ["tallapaka annamacharya", "annamaachaarya", "annamacharya"],
+        "Bhadrachala Ramadasu": ["bhadrachala ramadasu", "bhadrachala ramadasa", "bhadraachala raama daasu"],
+        "Purandaradasa": ["purandaradasa", "purandaradaasa", "purandara dasa"],
+        "Narayana Teertha": ["narayana teertha", "narayanatheertha", "narayana tirtha"],
+        "Paidala Gurumurti Sastri": ["paidala gurumurti sastri", "paidala gurumurti shastri", "gurumurti sastri"],
+        "Swathi Thirunal": ["swathi thirunal", "maharaaja swathi thirunal raama varma", "swathi thirunal rama varma", "maharaaja swathi thirunal"],
+        "Oottukkadu Venkata Kavi": ["oottukkadu venkata kavi", "ootthukaadu ventaka subbaiyyer", "ootthukkadu venkata kavi"],
+        "Syama Sastri": ["syama sastri", "shyaama shaasthri", "shyaama shaashtri", "shyama shastri"],
+        "Veena Kuppayyar": ["veena kuppayyar", "veenai kuppayyar"],
+        "Manambuchavadi Venkatasubbayyar", ["manambuchavadi venkatasubbayyar", "mānambuccāvaḍi venkaṭa subbayyar"],
+        "Patnam Subramania Iyer": ["patnam subramania iyer", "patnam subramanyam iyer", "patnam subramaniam iyer"],
+        "Kotthavaasal Venkatarama Ayyar": ["kotthavaasal venkatarama ayyar", "kottavāsal venkatarāmaiyer"],
+        "Tiruvottriyur Tyagayya": ["tiruvottriyur tyagayya", "thiruvoṟṟiyūr thyāagayya", "thiruvoṟṟiyūr thyāgayya"],
+        "Pacchimiriam Adiyappa": ["pacchimiriam adiyappa", "pacchimariyam addiyappa"],
+        "Lalgudi Jayaraman": ["lalgudi jayararaman", "laalgudi jayaraman", "lalgudi jayaraman"],
+        "Muthiah Bhagavatar": ["muthiah bhagavatar", "mutthiah bhaagavathar"],
+        "Tiger Varadachariar": ["tiger varadachariar", "tiger varadhacharier"],
+        "Kanakadasa": ["kanakadasa", "kanakadaasa"],
+        "Papanasam Sivan": ["papanasam sivan", "paapanasham shivan"],
+        "Mysore Vasudevacharya": ["mysore vasudevacharya", "mysore vaasudevacharya"],
+        "Mayuram Viswanatha Sastri": ["mayuram viswanatha sastri", "mayooram vishvanaatha shasthri"]
+    };
+
+    // Helper function to check if sheet name matches main composer profile dynamically
+    function isComposerMatch(sheetComposerName, mainComposerName) {
+        if (!sheetComposerName) return false;
+        const cleanSheet = sheetComposerName.trim().toLowerCase();
+        const cleanMain = mainComposerName.trim().toLowerCase();
+        
+        // Exact case-insensitive match
+        if (cleanSheet.includes(cleanMain) || cleanMain.includes(cleanSheet)) {
+            return true;
+        }
+        
+        // Match using the aliases defined above
+        const aliases = composerSpellingAliases[mainComposerName];
+        if (aliases) {
+            return aliases.some(alias => cleanSheet.includes(alias) || alias.includes(cleanSheet));
+        }
+        return false;
+    }
+
     // Comprehensive Eras-based Composers Database
     const composersDb = [
         // PRE-TRINITY
@@ -624,189 +668,189 @@
             timeline: "12th century",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "A legendary 12th-century Veerashaiva mystic, social reformer, and highly revered Vachana poet. His philosophical verses laid deep spiritual pathways in the early development of Kannada devotional structures."
+            bio: "A legendary 12th-century Veerashaiva mystic, social reformer, and highly revered Vachana poet."
         },
         {
             name: "Andal",
             timeline: "9th century",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "The only female Alvar saint among the 12 Alvar saints of South India. She is celebrated for her extraordinary Tamil compositions, 'Thiruppavai' and 'Nachiar Tirumozhi', which are intensely devotional and highly active in classical/devotional repertoires."
+            bio: "The only female Alvar saint among the 12 Alvar saints of South India. Celebrated for Thiruppavai."
         },
         {
             name: "Tirugnana Sambandar",
             timeline: "7th century",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "A highly prominent 7th-century Tamil Shaivite poet-saint. He composed thousands of hymns of Tevaram, playing an instrumental role in shaping religious music and the structural traditions of early Tamil music."
+            bio: "A highly prominent 7th-century Tamil Shaivite poet-saint who composed Tevaram hymns."
         },
         {
             name: "Arunagirinathar",
             timeline: "born 1480",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "A brilliant 15th-century Tamil poet-saint renowned for composing 'Thiruppugazh'—a phenomenal work revered not only for its intense devotion to Lord Murugan but for its incredibly complex, unparalleled rhythmic structures (chandam patterns)."
+            bio: "Renowned for Thiruppugazh, with its exceptionally complex, rhythmic structures."
         },
         {
             name: "Bhadrachala Ramadasu",
             timeline: "1620 – 1688",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "Also known as Kancharla Gopanna, he was an extraordinary 17th-century Telugu devotee of Lord Rama. He composed moving devotional songs (keertanas) that directly inspired Tyagaraja's compositional style."
+            bio: "Kancharla Gopanna, composed Telugu devotional keertanas that inspired Tyagaraja."
         },
         {
             name: "Jayadeva",
             timeline: "12th century",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "An illustrious 12th-century Sanskrit poet who composed the legendary 'Gita Govinda'. This monumental epic depicts the sublime love between Krishna and Radha, forming a fundamental structural basis for Ashtapadis sung widely in both Carnatic and Odissi classical systems."
+            bio: "Illustrious Sanskrit poet who composed the legendary 'Gita Govinda'."
         },
         {
             name: "Kanakadasa",
             timeline: "1509 – 1609",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "A celebrated Haridasa saint, philosopher, and composer. Writing in Kannada, he used the pen name 'Keshava' to compose countless keertanas, ughabhogas, and philosophical works that promoted social equality and deep personal devotion."
+            bio: "A celebrated Kannada Haridasa saint, philosopher, and composer."
         },
         {
             name: "Karaikkal Ammeiyar",
             timeline: "7th century",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "One of the earliest and most respected of the 63 Nayanmars (Shaivite saints). Her pioneering verses in Tamil classical metrics represent some of the oldest structures of what eventually evolved into temple hymnody and devotional music."
+            bio: "One of the earliest of the 63 Nayanmars, pioneering early Tamil devotional metrics."
         },
         {
             name: "Kshetrayya",
             timeline: "1600 – 1680",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "An exceptional 17th-century Telugu poet and composer who perfected the musical dance form known as 'Padam'. His deeply emotive compositions, written under the mudra 'Muvvagopala', are vital masterpieces in both Carnatic concerts and classical dance (Kuchipudi/Bharatanatyam)."
+            bio: "Telugu poet and composer who perfected the emotive classical dance Padam form."
         },
         {
             name: "Madhwacharya",
             timeline: "12th century",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "The foundational philosopher of the Dvaita school of Vedanta. He initiated the legendary Haridasa movement of Karnataka, creating early devotional stotras and chants that paved the way for subsequent generations of musical saints."
+            bio: "Foundational philosopher of the Dvaita school of Vedanta and Haridasa patron."
         },
         {
             name: "Manikkavasagar",
             timeline: "10th century",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "A highly celebrated 10th-century Tamil poet-saint who authored 'Tiruvasakam', a profound book of Shaivite hymns. Known for their exquisite emotional depth, these hymns are widely set to ancient musical pans and classical ragas."
+            bio: "Tamil poet-saint who authored 'Tiruvasakam', a profound book of Shaivite hymns."
         },
         {
             name: "Muthu Thandavar",
             timeline: "1525 – 1625",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "One of the legendary Tamil Trinity of Carnatic Music. He was an early pioneer of the critical Pallavi-Anupallavi-Charanam krithi format and composed numerous padams in Tamil devoted to Lord Nataraja."
+            bio: "One of the legendary Tamil Trinity. Early pioneer of the Pallavi-Anupallavi-Charanam structure."
         },
         {
             name: "Naraharitirtha",
             timeline: "1250 – 1333",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "One of the earliest direct disciples of Madhwacharya, credited as a foundational pioneer of the Haridasa devotional movement. He composed early classical songs in Kannada, initiating the tradition of musical propagation of philosophy."
+            bio: "Early direct disciple of Madhwacharya who pioneered Haridasa songs in Kannada."
         },
         {
             name: "Narayana Teertha",
             timeline: "1650 – 1725",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "An outstanding saint-composer who wrote the brilliant Sanskrit opera 'Krishna Leela Tarangini'. These dynamic compositions, written as 'Tarangams', feature complex rhythms and are beloved by dancers and musicians alike."
+            bio: "Composer of the Sanskrit opera 'Krishna Leela Tarangini' (Tarangams)."
         },
         {
             name: "Padmanabha Tirtha",
             timeline: "12th century",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "The first direct monastic disciple of Sri Madhwacharya. He contributed foundational scholarly commentaries and initiated early traditional vocal styling within the Dvaita spiritual lineage."
+            bio: "First direct monastic disciple of Sri Madhwacharya, initiating early vocal styles."
         },
         {
             name: "Papanasa Mudaliar",
             timeline: "1650 – 1725",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "A talented early composer of Tamil Carnatic music, remembered particularly for his contributions to the 'Nindastuti' genre (songs praising a deity in a seemingly critical, satirical manner)."
+            bio: "Early Tamil Carnatic composer, remembered for the Nindastuti genre."
         },
         {
             name: "Paidala Gurumurti Sastri",
             timeline: "17th century",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "A towering musicologist and composer of the 17th century. He was widely praised as 'Varna Singham' and is celebrated for composing over 1,000 highly pedagogical geethams that formed the core framework for early music learners."
+            bio: "Towering 17th-century musicologist who composed over 1,000 pedagogic geethams."
         },
         {
             name: "Purandaradasa",
             timeline: "1484 – 1564",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "Universally revered as the **'Pitamaha of Carnatic Music'** (Grandfather of Carnatic Music). He scientifically structured the pedagogical framework (Sarali, Jantai, Alankaras in Mayamalavagowla raga) and composed thousands of Kannada Devarnamas that remain foundational."
+            bio: "Universally revered as the **'Pitamaha of Carnatic Music'** (Grandfather of Carnatic Music)."
         },
         {
             name: "Raghavendra Swami",
             timeline: "1595 – 1671",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "A legendary saint, philosopher, and accomplished Veena player. He composed several devotional Kannada songs (including 'Indu Enage Govinda') under the pen name 'Venu Gopala'."
+            bio: "Legendary saint and Veena maestro who composed under the pen name 'Venu Gopala'."
         },
         {
             name: "Sarangapani",
             timeline: "1680 – 1750",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "An expert composer from Karvetinagar who created exquisite Telugu padams. He is celebrated for his deep command of both romantic (sringara) poetry and musical theory, making his works staples in classical dance."
+            bio: "Created exquisite Telugu padams with deep romantic and spiritual expressions."
         },
         {
             name: "Sripadaraya",
             timeline: "1404 – 1502",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "A highly influential scholar and Haridasa saint credited as the pioneer of the 'Suladi' musical style in Kannada. He significantly integrated classical musical forms directly into daily temple worship."
+            bio: "Haridasa saint credited as the pioneer of the 'Suladi' musical form in Kannada."
         },
         {
             name: "Sundaramurti",
             timeline: "7th century",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "A major 7th-century Tamil Shaivite saint and composer. His songs within the Tevaram collection are acclaimed for their deep, intimate, and friendly conversational attitude towards the deity."
+            bio: "Shaivite saint whose Tevaram songs treat the deity in a highly personal manner."
         },
         {
             name: "Thirunavukkarasar",
             timeline: "7th century",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "Also known affectionately as Appar, he was a giant of Tamil devotional poetry. His profound hymns are structured elegantly with deep, poetic meter and form an integral part of the ancient pan/raga systems."
+            bio: "Also known as Appar, he wrote profound hymns set to ancient pan and raga frameworks."
         },
         {
             name: "Tallapaka Annamacharya",
             timeline: "1408 – 1503",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "Widely known as **'Pada-kavita Pitamaha'** (Grandfather of Songwriting). He composed over 32,000 Telugu and Sanskrit Sankirtanas in praise of Lord Venkateswara, pioneering the Sringara and Adhyatma genres on copper plates."
+            bio: "Pioneered over 32,000 Sanskrit and Telugu Sankirtanas on copper plates for Venkateswara."
         },
         {
             name: "Vadirajatirtha",
             timeline: "1480 – 1600",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "A highly respected Haridasa saint, scholar, and prolific composer. Writing under the mudra 'Hayavadana', his Kannada keertanas and Sanskrit stotras cover a vast range of philosophical and devotional ideas."
+            bio: "Haridasa saint who composed under 'Hayavadana' in both Kannada and Sanskrit."
         },
         {
             name: "Vijaya Dasa",
             timeline: "1682 – 1755",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "A prominent Kannada Haridasa who composed numerous Suladis and ugabhogas. Writing under the mudra 'Vijaya Vittala', he was instrumental in popularizing devotional music across Karnataka."
+            bio: "Prominent Haridasa who wrote under 'Vijaya Vittala', popularizing devotional music."
         },
         {
             name: "Vyasatirtha",
             timeline: "1460 – 1539",
             era: "Pre-Trinity Era composers (17th century and prior)",
             eraDesc: "These are early stage composers that created the rules and foundations of classical music.",
-            bio: "The royal guru of the Vijayanagara Empire and master philosopher. Under his guidance, the Haridasa lineage flourished, and he composed highly complex, structured philosophical songs in Kannada."
+            bio: "Royal guru of Vijayanagara who structured philosophical songs in Kannada."
         },
 
         // TRINITY ERA
@@ -814,134 +858,134 @@
             name: "Arunachala Kavi",
             timeline: "1711 – 1788",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "An outstanding 18th-century scholar and composer who authored the legendary 'Rama Natakam', a landmark musical opera in Tamil. His songs are famed for their beautiful narrative lyrics and deep emotional resonance."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "Author of the 'Rama Natakam', a legendary musical Tamil drama opera."
         },
         {
             name: "Ghanam Krishna Iyer",
             timeline: "1790 – 1854",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "A highly skilled composer of Tamil padams. He gained the moniker 'Ghanam' due to his mastery of the extremely difficult and complex 'Ghanam' vocal style of Carnatic singing."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "Master of Tamil padams who gained fame for his complex, heavy 'Ghanam' singing."
         },
         {
             name: "Gopala Dasa",
             timeline: "1722 – 1762",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "A prominent Haridasa saint and composer from Karnataka. He composed soulful devotional songs in Kannada under the mudra 'Gopala Vittala', blending intense astological and spiritual wisdom."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "Haridasa saint from Karnataka who composed under the mudra 'Gopala Vittala'."
         },
         {
             name: "Iraiyamman Tampi",
             timeline: "1782 – 1856",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "A court musician of Travancore. He is celebrated for composing the world-famous Malayalam lullaby 'Omanathingal Kidavo', alongside beautiful Padams and Kathakali musical plays."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "Travancore court poet who composed 'Omanathingal Kidavo' and beautiful Kathakali plays."
         },
         {
             name: "Jagannatha Dasa",
             timeline: "1728 – 1809",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "A prominent 18th-century Haridasa scholar who authored the masterful 'Harikathamritasara' in Kannada. He set many highly sophisticated philosophical tenets into classical musical meters."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "Scholar who authored 'Harikathamritasara', putting deep tenets into musical meters."
         },
         {
             name: "Kaiwara Sri Yogi Nareyana",
             timeline: "1730 – 1840",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "A revered mystic, philosopher, and poet. He composed brilliant devotional and moral keertanas in both Telugu and Kannada under the signature 'Amara Nareyana'."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "Composed brilliant devotional keertanas under the signature 'Amara Nareyana'."
         },
         {
             name: "Krishnarajendra Wodeyar III",
             timeline: "1799 – 1868",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "The benevolent Maharaja of Mysore who was a great scholar and patron of fine arts. He composed several classical pieces and actively sponsored legendary composers of his era."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "Maharaja of Mysore, a great classical patron who sponsored and composed music."
         },
         {
             name: "Marimutthu Pillai",
             timeline: "1717 – 1787",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "A pivotal 18th-century Tamil composer who, alongside Muthu Thandavar and Papansa Mudaliar, established the early Tamil Trinity. He composed many standard padams and keertanas dedicated to Lord Nataraja."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "Pivotal Tamil composer who established the pre-Trinity Tamil musical framework."
         },
         {
             name: "Muthuswami Dikshitar",
             timeline: "1775 – 1835",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "One of the immortal Trinity of Carnatic Music. His Sanskrit compositions are famed for their grand, majestic pace (Chowka Kala), elaborate temple descriptions, usage of Veena-style gamakas, and the inclusion of 'Raga Mudra'."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "One of the immortal Trinity. Famous for majestic Chowka Kala paces and temple descriptions."
         },
         {
             name: "Mysore Sadasiva Rao",
             timeline: "born 1790",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "A stellar court musician of Mysore. A disciple of Walajapet Venkataramana Bhagavatar (who was a direct student of Tyagaraja), Sadasiva Rao composed brilliant, rhythmically complex Sanskrit and Telugu krithis."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "Mysore court musician who composed highly artistic, detailed Sanskrit and Telugu krithis."
         },
         {
             name: "Oottukkadu Venkata Kavi",
             timeline: "1700 – 1765",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "An absolute genius who composed outstanding, rhythmically complex, and emotionally charged krithis in Tamil and Sanskrit. He pioneered massive musical forms, including the legendary Kamakshi Navavarana cycle, long before the Trinity was born."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "A compositional genius who pioneered Kamakshi Navavarana cycles with intricate rhythm structures."
         },
         {
             name: "Pacchimiriam Adiyappa",
             timeline: "early 18th century",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "An outstanding 18th-century court musician of Tanjore. He is globally celebrated as the composer of the legendary Bhairavi raga Ata Tala Varnam, 'Viriboni'—universally regarded as the benchmark of the Varnam musical form."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "Creator of the legendary Bhairavi Ata Tala Varnam, 'Viriboni', the absolute benchmark of varnams."
         },
         {
             name: "Sadasiva Brahmendra",
             timeline: "18th century",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "A highly revered Advaita philosopher and saint. He composed beautiful, deeply contemplative Sanskrit songs (such as 'Manasa Sanchara Re') characterized by simple words but profound philosophical truth."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "Advaita saint who composed contemplative Sanskrit songs like 'Manasa Sanchara Re'."
         },
         {
             name: "Tyagaraja",
             timeline: "1767 – 1847",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "One of the Trinity of Carnatic Music. Born in Tiruvarur, he composed thousands of devotional kritis, mostly in Telugu and in praise of Lord Rama. He popularized the 'Sangatani' (melodic variations) structure and composed the legendary Ghanaraga Pancharatna Kritis."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "One of the Trinity. He popularized Sangatis (variations) and composed the Ghanaraga Pancharatna Kritis."
         },
         {
             name: "Anai Ayya brothers",
             timeline: "1776 – 1857",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "The famous sibling duo (Anai and Ayya) who composed exquisite devotional songs in Tamil and Telugu. They successfully used the signature 'Umadasa' for their compositions."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "Sibling duo who wrote expressive Telugu and Tamil kritis with 'Umadasa' signature."
         },
         {
             name: "Tiruvarur Ramaswami Pillai",
             timeline: "1798 – 1852",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "A dedicated temple musician and talented 19th-century Tamil composer. He created outstanding devotional compositions with brilliant melodic settings."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "Dedicated temple scholar who created beautiful Tamil compositions."
         },
         {
             name: "Ramaswami Dikshitar",
             timeline: "1735 – 1817",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "The father of Muthuswami Dikshitar. He was a brilliant scholar who structured and invented the raga Hamsadhvani, and composed outstanding Ragamalikas (including the 108-raga composition)."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "Father of Muthuswami Dikshitar, who structured and invented the beautiful raga Hamsadhvani."
         },
         {
             name: "Swathi Thirunal",
             timeline: "1813 – 1846",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "The Maharaja of Travancore. A brilliant polyglot and composer, he penned over 400 compositions in Sanskrit, Malayalam, Telugu, Kannada, Tamil, Hindi, and Braj Bhasha, beautifully blending both Carnatic and Hindustani musical systems."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "Maharaja of Travancore. Composed over 400 pieces spanning 7 languages with immense grace."
         },
         {
             name: "Syama Sastri",
             timeline: "1762 – 1827",
             era: "Trinity Era Composers (18th Century)",
-            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music with the introduction of new ragas, krithis and musical forms that are widely adopted and laid foundation for what we know today as Classical music.",
-            bio: "The eldest of the Trinity. Coming from a family of priests at the Bangaru Kamakshi Temple in Thanjavur, his compositions are primarily in Telugu and Sanskrit devoted to Goddess Kamakshi. He is celebrated for his masterly grip on complex rhythmic structures (Tala), swarajatis, and his exquisite use of Misra Chapu tala."
+            eraDesc: "Composers of 18th Century started a new era in the history of Carnatic music.",
+            bio: "The eldest of the Trinity. Famous for his complex Misra Chapu rhythms and Kamakshi swarajatis."
         },
 
         // POST-TRINITY
@@ -949,239 +993,239 @@
             name: "Ajjada Adibhatla Narayana Dasu",
             timeline: "1864 – 1945",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "Widely regarded as the pioneer of the art of Harikatha (devotional musical storytelling) in Telugu. He was a great linguist and composer who authored and set music for several highly dramatic Hari Kathas."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Regarded as the dynamic pioneer of Telugu Harikatha performance and storytelling."
         },
         {
             name: "Ambi Dikshitar",
             timeline: "1863 – 1936",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A direct descendant of Muthuswami Dikshitar's lineage. He is legendary for preserving and propagating the Muthuswami Dikshitar style and compositions into the modern era, using the signature mudra 'guruguha' for around 10 unique compositions currently available."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Preserved and propagated Muthuswami Dikshitar compositions with the 'guruguha' mudra."
         },
         {
             name: "Annamalai Reddiyar",
             timeline: "1865 – 1891",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A renowned Tamil poet and composer of the 19th century. He created the masterful 'Kavadi Chindu' form, rendering brilliant folk-style classical melodies dedicated to Lord Murugan."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Created 'Kavadi Chindu' patterns to render beautiful, rhythmic folk-classical melodies."
         },
         {
             name: "Cheyyur Chengalvaraya Sastri",
             timeline: "1810 – 1900",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A prolific 19th-century composer who was a master of Sanskrit and Telugu. He composed over 1,000 krithis and several outstanding musical plays."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Sanskrit and Telugu master who composed over 1,000 highly artistic krithis."
         },
         {
             name: "Chittor Subrahmanya Pillai",
             timeline: "1898 – 1975",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A towering vocalist and composer of the Kancheepuram school. He is celebrated for his uncompromising adherence to classicism and his beautiful Laya-focused compositions."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Vocalist celebrated for his strict adherence to traditional Laya-focused concert setups."
         },
         {
             name: "Dharmapuri Subbarayar",
             timeline: "19th century",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A master composer of the 19th century who composed more than 50 highly elegant, structurally complex Javalis that remain central to the dance and classical concert repertoire today."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Composed more than 50 highly elegant, structurally complex Javalis."
         },
         {
             name: "Ennappadam Venkatarama Bhagavatar",
             timeline: "1880 – 1961",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A stellar vocalist, scholar, and composer who carried forward classical values with several beautifully structured compositions."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Stellar vocalist who carried forward classic values through beautifully detailed pieces."
         },
         {
             name: "Gopalakrishna Bharathi",
             timeline: "1811 – 1896",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "An outstanding 19th-century composer who created the historic Tamil opera 'Nandanar Charitram'. His moving songs remain classics of the stage and performance halls."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Composed the historic, highly moving Tamil opera 'Nandanar Charitram'."
         },
         {
             name: "Jayachamaraja Wodeyar",
             timeline: "1919 – 1974",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "The last ruling Maharaja of Mysore. He was a phenomenal composer who created 94 masterly classical Carnatic krithis in complex ragas using the signature mudra 'Srividya'."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "The last Maharaja of Mysore who composed 94 grand kritis using 'Srividya'."
         },
         {
             name: "Kavi Kunjara Bharati",
             timeline: "1810 – 1896",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A legendary Tamil poet and composer of the 19th century, renowned for his monumental 'Azhagar Kuravanji' and several gorgeous classical compositions."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Renowned Tamil lyricist who authored the monumental 'Azhagar Kuravanji'."
         },
         {
             name: "Koteeswara Iyer",
             timeline: "1870 – 1940",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A genius who composed outstanding Tamil krithis across **all 72 Melakarta ragas**. He used the mudra 'Kavi Kunjara Dasa' to honor his illustrious grandfather."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "A genius who composed outstanding Tamil krithis across **all 72 Melakarta ragas**."
         },
         {
             name: "Kotthavaasal Venkatarama Ayyar",
             timeline: "1810 – 1880",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A widely acclaimed composer of technical, pedagogical pieces including outstanding Tana Varnams and Lakshana Geethams."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Acclaimed composer of technical pedagogical works like Tana Varnams."
         },
         {
             name: "Maha Vaidyanatha Iyer",
             timeline: "1844 – 1893",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A legendary 19th-century musician and scholar who composed the magnificent **'Mela raga maalika'**, a monumental work showcasing all 72 primary ragas in a single continuous composition."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Composed the massive **'Mela raga maalika'** covering all 72 primary ragas continuously."
         },
         {
             name: "Manambuchavadi Venkatasubbayyar",
             timeline: "19th century",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A direct, first-generation disciple of Tyagaraja who trained several giants of the post-trinity era. He composed several masterly krithis in Telugu."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "A direct disciple of Tyagaraja who trained several giants of the post-Trinity era."
         },
         {
             name: "Mayuram Viswanatha Sastri",
             timeline: "1893 – 1958",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A versatile composer who authored 'Murugan Madhura Kirtanai'. He composed highly patriotic and devotional songs in both Sanskrit and Tamil."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Composed 'Murugan Madhura Kirtanai' alongside patriotic songs."
         },
         {
             name: "Muthiah Bhagavatar",
             timeline: "1877 – 1945",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A towering musicologist and composer. He was the first president of the Madras Music Academy and composed over 400 classical pieces in Sanskrit, Kannada, and Tamil, introducing several new ragas."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "First president of Music Academy who composed over 400 pieces, creating several ragas."
         },
         {
             name: "Mysore T. Chowdiah",
             timeline: "1894 – 1967",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A legendary violinist and composer, famous for creating the unique seven-stringed violin. He composed several highly artistic Carnatic pieces."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Legendary violinist and composer who invented the unique seven-stringed violin."
         },
         {
             name: "Mysore Vasudevacharya",
             timeline: "1865 – 1961",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A direct student of Patnam Subramania Iyer. He composed over 200 masterpieces in Telugu and Sanskrit, including the universally beloved 'Brochevarevarera'."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Composed over 200 masterpieces in Telugu and Sanskrit, like 'Brochevarevarera'."
         },
         {
             name: "Neelakanta Sivan",
             timeline: "1839 – 1900",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A prolific 19th-century composer of Tamil devotional songs. His works are highly charged with devotional emotion (bhakti) and remain extremely popular."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Prolific Tamil composer of devotional songs highly charged with Bhakti bhava."
         },
         {
             name: "Pallavi Seshayyar",
             timeline: "1842 – 1905",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A brilliant composer and direct disciple of Neykarapatti Subba Iyer. He is famed for his mastery in Pallavi singing and elegant krithis."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Disciple of Neykarapatti Subba Iyer, famed for intricate Pallavi structures."
         },
         {
             name: "Papanasam Sivan",
             timeline: "1890 – 1973",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "Commonly praised as the **'Tamil Tyagaraja'**. He composed over 500 devotional songs in Tamil rich in Bhava (emotion), bridging classical music with devotional congregational singing and early Tamil cinema."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Commonly praised as the **'Tamil Tyagaraja'** with over 500 deeply emotional kritis."
         },
         {
             name: "Patnam Subramania Iyer",
             timeline: "1845 – 1902",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "An outstanding composer of the post-trinity era who created brilliant Varnams, Krithis, and Javalis. He trained numerous legends, including Mysore Vasudevacharya."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Outstanding composer who created brilliant Varnams, Krithis, and Javalis."
         },
         {
             name: "Pattabhiramayya",
             timeline: "born 1863",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A celebrated 19th-century composer of exquisite Javalis in Telugu, famous for their beautiful poetic imagery."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Celebrated composer of highly refined, poetic Telugu Javalis."
         },
         {
             name: "Poochi Srinivasa Iyengar",
             timeline: "1860 – 1919",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "Also known as Ramanathapuram Srinivasa Iyengar. He composed beautiful varnams, krithis, and tillanas, and was the primary guru of the legendary Ariyakudi Ramanuja Iyengar."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Composed beautiful varnams, krithis, and tillanas; trained Ariyakudi Ramanuja Iyengar."
         },
         {
             name: "Rallapalli Anantha Krishna Sharma",
             timeline: "1893 – 1979",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A massive literary scholar, singer, and composer who spent decades painstakingly restoring and setting to tune the copper plates of Annamacharya."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Literary master who spent decades setting copper plates of Annamacharya to tune."
         },
         {
             name: "Subbarama Dikshitar",
             timeline: "1839 – 1906",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "The compiler of the historic 'Sangita Sampradaya Pradarshini'—a monumental encyclopedic work of Carnatic musicology that preserved the authentic notations of Muthuswami Dikshitar."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Compiler of 'Sangita Sampradaya Pradarshini', preserving authentic old notations."
         },
         {
             name: "Subbaraya Sastri",
             timeline: "1803 – 1862",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "The talented son of Syama Sastri and a first-generation disciple of Tyagaraja. His rare, exquisitely structured krithis are highly prized in Carnatic music."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Talented son of Syama Sastri, utilizing rare, exquisitely layered compositions."
         },
         {
             name: "Mahakavi Subramanya Bharathiyar",
             timeline: "1882 – 1921",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "The legendary pioneer of modern Tamil poetry. His highly patriotic, social, and devotional verses are set to sublime classical ragas and sung globally."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Pioneer of modern Tamil poetry whose patriotic works are widely sung."
         },
         {
             name: "Shuddhananda Bharati",
             timeline: "1897 – 1990",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A highly acclaimed spiritual philosopher, yogi, and composer who authored thousands of devotional and philosophical songs in Tamil."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Yogi and philosopher who authored thousands of devotional verses in Tamil."
         },
         {
             name: "Thanjavur Quartet",
             timeline: "1801 – 1856",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "The four legendary brothers (Chinnayya, Ponnayya, Sivanandam, and Vadivelu) who codified the Bharatanatyam dance repertoire and composed countless padams and varnams."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Four brothers who codified Bharatanatyam and composed various padams and varnams."
         },
         {
             name: "Tiger Varadachariar",
             timeline: "1876 – 1950",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "An extraordinary vocalist, pedagogue, and composer of classical pieces who headed several major institutional musical departments."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Extraordinary pedagogue who headed key institutional music departments."
         },
         {
             name: "Tiruvottriyur Tyagayya",
             timeline: "1845 – 1917",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "The son of Veena Kuppayya. He composed several masterly varnams and krithis, preserving and teaching his father's vast family library."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Son of Veena Kuppayya, who composed masterly varnams and kritis."
         },
         {
             name: "Veena Kuppayyar",
             timeline: "1798 – 1860",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "A brilliant first-generation disciple of Tyagaraja. An expert on both the Violin and Veena, he composed several majestic Varnams and Krithis under the mudra 'Gopaladasa'."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "First-generation disciple of Tyagaraja who wrote under 'Gopaladasa'."
         },
         {
             name: "Veene Sheshanna",
             timeline: "1852 – 1926",
             era: "Post-Trinity Era composers (19th century)",
-            eraDesc: "Composers of this era successfully propagated classicism, introduced detailed notation, and created beautiful modern concert formats.",
-            bio: "An outstanding Veena maestro from the Mysore court. He composed extremely brilliant tillanas and swarajatis that remain benchmark performance pieces."
+            eraDesc: "Composers of this era successfully propagated classicism into modern presentation formats.",
+            bio: "Veena maestro of Mysore court who composed brilliant tillanas and swarajatis."
         },
 
         // MODERN ERA
@@ -1190,140 +1234,140 @@
             timeline: "Modern Era",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "A stellar violinist and composer who has made history with her innovative instrumental compositions, violin ensembles, and raga creations."
+            bio: "Violinist who made history with her innovative instrumental violin ensemble patterns."
         },
         {
             name: "Ambujam Krishna",
             timeline: "1917 – 1989",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "A highly talented modern composer who wrote over 600 expressive devotional compositions in Tamil, Sanskrit, and Telugu, beautifully tuned by leading vocalists."
+            bio: "Wrote over 600 expressive compositions in Tamil, Sanskrit, and Telugu."
         },
         {
             name: "Annavarapu Rama Swamy",
             timeline: "born 1926",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "A veteran violinist and composer from Andhra Pradesh who has made valuable musical additions to classical pedagogical systems."
+            bio: "Veteran violinist and composer who added valuable pedagogical layers."
         },
         {
             name: "G. N. Balasubramaniam",
             timeline: "1910 – 1965",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "The legendary vocalist who revolutionized Carnatic concert tempos. He composed brilliant Sanskrit, Telugu, and Tamil krithis under the mudra 'Srividya'."
+            bio: "Vocalist who revolutionized concert tempos, composing under 'Srividya'."
         },
         {
             name: "Kalyani Varadarajan",
             timeline: "1923 – 2003",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "An exceptionally talented composer who achieved the rare milestone of composing structured Carnatic krithis across **all 72 Melakarta ragas**."
+            bio: "Composed structured Carnatic krithis across **all 72 Melakarta ragas**."
         },
         {
             name: "K. Ramaraj",
             timeline: "1936 – 2009",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "A highly knowledgeable modern Carnatic composer who contributed highly structured, pedagogical musical works."
+            bio: "Contributed highly structured, pedagogical modern Carnatic works."
         },
         {
             name: "Lalgudi Jayaraman",
             timeline: "1930 – 2013",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "A legendary Carnatic violinist and composer. Renowned for his unique style (Lalgudi Bani), he composed incredibly popular Varnams and Tillanas that are staples in concerts and dance performances today."
+            bio: "Renowned Bani creator, composing incredibly popular Varnams and Tillanas."
         },
         {
             name: "M. Balamuralikrishna",
             timeline: "1930 – 2016",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "An unmatched genius of the modern era. He composed in **all 72 Melakarta ragas** and created several entirely new ragas, including those consisting of **fewer than 5 notes** (such as Lavangi, Mahathi, and Siddhi)."
+            bio: "Composed in **all 72 Melakarta ragas** and created new ragas with **fewer than 5 notes**."
         },
         {
             name: "M. D. Ramanathan",
             timeline: "1923 – 1984",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "A highly revered vocalist known for his deep bass voice. He composed beautifully under the signature 'Varadadasa', capturing his deep devotion to his guru Tiger Varadachariar."
+            bio: "Revered deep-bass vocalist who composed beautiful kritis under the signature 'Varadadasa'."
         },
         {
             name: "Maharajapuram Santhanam",
             timeline: "1928 – 1992",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "One of the most popular modern vocalists, celebrated for composing incredibly catchy and highly melodic devotional songs that remain concert favorites."
+            bio: "Highly popular vocalist who composed exceptionally catchy modern concert items."
         },
         {
             name: "N. Ravikiran",
             timeline: "born 1967",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "The legendary Chitravina maestro who introduced the concept of melharmony. He achieved the astonishing feat of composing structured classical works in **all 35 Sulaadi talas**."
+            bio: "Chitravina maestro who composed classical works in **all 35 Sulaadi talas**."
         },
         {
             name: "N. S. Ramachandran",
             timeline: "1908 – 1981",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "A brilliant academician, researcher, and composer who left behind highly aesthetic Carnatic classical compositions."
+            bio: "Academician and researcher who left behind highly aesthetic Carnatic pieces."
         },
         {
             name: "Nallan Chakravartula Krishnamacharyulu",
             timeline: "1924 – 2006",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "An acclaimed Telugu musicologist, violinist, and composer who worked tirelessly to propagate classical music systems in Andhra."
+            bio: "Acclaimed Telugu musicologist, violinist, and composer of classical systems."
         },
         {
             name: "Periyasami Thooran",
             timeline: "1908 – 1987",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "A master Tamil composer who wrote **lyrical content exclusively**. His brilliant, highly expressive lyrics were set to exquisite music by several of his contemporary classical musicians."
+            bio: "Wrote **lyrical content exclusively**, later tuned beautifully by contemporary maestros."
         },
         {
             name: "Samavedam Shanmukha Sarma",
             timeline: "born 1967",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "A brilliant contemporary spiritual orator and poet who has **composed lyrics exclusively** for several devotional krithis, with music tuned by contemporary maestros."
+            bio: "Spiritual orator who **composed lyrics exclusively** for several devotional krithis."
         },
         {
             name: "Suguna Purushothaman",
             timeline: "1941 – 2015",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "A celebrated vocalist and composer who authored a beautiful cycle of **Navagraha Krithis (planetary songs) in Tamil**."
+            bio: "Authored a beautiful cycle of **Navagraha Krithis (planetary songs) in Tamil**."
         },
         {
             name: "T. V. Gopalakrishnan",
             timeline: "born 1932",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "A versatile multi-instrumentalist, vocalist, and composer who has bridges classical systems with jazz, hindustani, and folk rhythms."
+            bio: "Multi-instrumentalist and vocalist who bridges classical systems with jazz and folk."
         },
         {
             name: "T. R. Subramaniam",
             timeline: "1929 – 2013",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "A brilliant Carnatic academician and vocalist who composed highly intellectual and rhythmically challenging krithis."
+            bio: "Vocalist who composed highly intellectual and rhythmically challenging krithis."
         },
         {
             name: "R. Ramachandran Nair",
             timeline: "born 1939",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "Writing under the mudra 'Thulasivanam', he is a dedicated composer who has **composed lyrics exclusively** for classical pieces, set to music by leading musicians."
+            bio: "Composed **lyrics exclusively** under the mudra 'Thulasivanam', tuned by experts."
         },
         {
             name: "Sundaranarayana",
             timeline: "1938 – 2013",
             era: "Modern Era composers (20th century and beyond)",
             eraDesc: "20th Century and contemporary composers who have adapted classicism to modern presentation formats.",
-            bio: "An expressive lyricist who **composed lyrical content exclusively**, leaving his beautiful writings to be set to music by contemporary classical masters."
+            bio: "Expressive lyricist who **composed lyrical content exclusively**."
         }
     ];
 
@@ -1332,7 +1376,6 @@
         threshold: 0.4
     });
 
-    // Helper to group array items by a specific property
     function groupBy(array, key) {
         return array.reduce((result, currentValue) => {
             (result[currentValue[key]] = result[currentValue[key]] || []).push(currentValue);
@@ -1340,7 +1383,6 @@
         }, {});
     }
 
-    // Render the list of composers organized by Historical Eras
     function displayComposers(data) {
         const container = document.getElementById('composer-list-container');
         container.innerHTML = '';
@@ -1352,7 +1394,6 @@
 
         const grouped = groupBy(data, 'era');
 
-        // Order we want to display eras
         const eraOrder = [
             "Pre-Trinity Era composers (17th century and prior)",
             "Trinity Era Composers (18th Century)",
@@ -1362,7 +1403,6 @@
 
         eraOrder.forEach(era => {
             if (grouped[era] && grouped[era].length > 0) {
-                // Era Header section
                 const headerDiv = document.createElement('div');
                 headerDiv.innerHTML = `
                     <h3 class="composer-era-title">${era}</h3>
@@ -1370,7 +1410,6 @@
                 `;
                 container.appendChild(headerDiv);
 
-                // Composer Cards within this Era
                 grouped[era].forEach(composer => {
                     const card = document.createElement('div');
                     card.className = 'composer-card';
@@ -1385,7 +1424,6 @@
         });
     }
 
-    // Show Composer profile, match and display their compositions dynamically
     function showComposerProfile(composer) {
         document.getElementById('composer-directory-view').style.display = 'none';
         document.getElementById('composer-detail-view').style.display = 'block';
@@ -1394,13 +1432,12 @@
         document.getElementById('detail-composer-timeline').innerText = composer.timeline;
         document.getElementById('detail-composer-bio').innerText = composer.bio;
 
-        // Automatically match songs from your Google Sheets data!
         const songContainer = document.getElementById('detail-composer-songs');
         songContainer.innerHTML = '';
 
-        // Case-insensitive matching for the composer's name
+        // Dynamic multi-spelling mapping filtering
         const matchedSongs = krithis.filter(song => 
-            song.Composer && song.Composer.toLowerCase().includes(composer.name.toLowerCase())
+            isComposerMatch(song.Composer, composer.name)
         );
 
         if (matchedSongs.length === 0) {
@@ -1413,12 +1450,10 @@
                     <span style="font-weight: 500; color: var(--primary-color);">${song.Name}</span>
                     <span style="font-size: 13px; color: #666;">Raaga: ${song.Raaga || 'N/A'}</span>
                 `;
-                // Clicking the song jumps the user to the Compositions tab and runs the search for that song!
                 songLink.onclick = () => {
                     switchTab('compositions');
                     const searchBar = document.getElementById('searchBar');
                     searchBar.value = song.Name;
-                    // Trigger search manually
                     searchBar.dispatchEvent(new Event('input'));
                 };
                 songContainer.appendChild(songLink);
@@ -1426,13 +1461,11 @@
         }
     }
 
-    // Go back to the list
     function backToComposerList() {
         document.getElementById('composer-detail-view').style.display = 'none';
         document.getElementById('composer-directory-view').style.display = 'block';
     }
 
-    // Bind composer search input
     document.getElementById('composerSearchBar').addEventListener('input', function(e) {
         const query = e.target.value.trim();
         if (!query) {
@@ -1443,10 +1476,7 @@
         displayComposers(results);
     });
 
-    // Initialize list on load
     displayComposers(composersDb);
-
-    // Run database fetch
     loadData();
 </script>
 
