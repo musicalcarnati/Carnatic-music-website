@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>XXX - Carnatic Music Portal</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
     <style>
         :root {
             --primary-color: #802b00;
@@ -309,7 +310,7 @@
     </div>
 
     <div id="compositions" class="tab-content">
-        <input type="text" id="searchBar" class="search-box" placeholder="Search by Song Name, Raaga, Composer, Deity, Language, or Type...">
+        <input type="text" id="searchBar" class="search-box" placeholder="Try typing 'syama sastri', 'lalgudi', 'hamsadhvani'...">
         <div id="directory">Loading database...</div>
         <div id="no-results" style="display: none;">No compositions match your search terms.</div>
     </div>
@@ -354,21 +355,17 @@
 <script>
     // Tab switching engine
     function switchTab(tabId) {
-        // Hide all tab content
         const contents = document.querySelectorAll('.tab-content');
         contents.forEach(content => content.classList.remove('active'));
 
-        // Remove active styling from all buttons
         const buttons = document.querySelectorAll('.nav-btn');
         buttons.forEach(button => button.classList.remove('active'));
 
-        // Show selected tab content
         const targetContent = document.getElementById(tabId);
         if (targetContent) {
             targetContent.classList.add('active');
         }
 
-        // Add active style to matching button
         const targetButton = document.getElementById('btn-' + tabId);
         if (targetButton) {
             targetButton.classList.add('active');
@@ -378,33 +375,18 @@
     // Live Google Sheet Database Configuration
     const sheetCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTK6h64L1-UuFhqNq2fWM0NHlPJT-d2zEDdXLi6ZE_iRR0K2pFRb5WLzEAyjIsSLbEgkOiFHh6RNZt0/pub?output=csv'; 
     let krithis = [];
+    let fuseInstance = null;
 
-    // Normalization logic for smart alias search (handles spellings, diacritics, etc.)
-    function normalizeText(text) {
+    // Standardizer helper to strip diacritics natively before indexing
+    function cleanDiacritics(text) {
         if (!text) return '';
-        let normalized = text.toString().toLowerCase();
-        
-        // 1. Remove diacritics (e.g., ā -> a, ṟ -> r)
-        normalized = normalized.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        normalized = normalized.replace(/[ṟṟ]/g, 'r').replace(/[āā]/g, 'a');
-
-        // 2. Harmonize double 'aa' to single 'a' to handle Lalgudi/Laalgudi, Aadhi/Adi, Raaga/Raga, etc.
-        normalized = normalized.replace(/aa/g, 'a');
-
-        // 3. Harmonize other common variations
-        normalized = normalized.replace(/hamsadhwani/g, 'hamsadhvani');
-        normalized = normalized.replace(/shyaama/g, 'syama');
-        normalized = normalized.replace(/shaasthri/g, 'sastri');
-        normalized = normalized.replace(/shastri/g, 'sastri');
-        
-        // Simplify spellings of major composers/terms for comparison
-        normalized = normalized.replace(/thyaagaraaja/g, 'tyagaraja');
-        normalized = normalized.replace(/thyaagaraja/g, 'tyagaraja');
-        normalized = normalized.replace(/thyāagayya/g, 'thyagayya');
-        normalized = normalized.replace(/thyagayya/g, 'tyagayya'); 
-        normalized = normalized.replace(/th/g, 't'); // handles the "th" vs "t" spelling variations globally
-        
-        return normalized.trim();
+        return text.toString()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[ṟṟ]/g, 'r')
+            .replace(/[āā]/g, 'a')
+            .toLowerCase()
+            .trim();
     }
 
     function loadData() {
@@ -412,7 +394,39 @@
             download: true,
             header: true,
             complete: function(results) {
-                krithis = results.data.filter(row => row.Name); 
+                // Keep valid rows
+                krithis = results.data.filter(row => row.Name);
+                
+                // Initialize the intelligent Fuzzy Matcher (Fuse.js)
+                const searchKeys = [
+                    { name: 'cleanName', weight: 0.35 },
+                    { name: 'cleanComposer', weight: 0.25 },
+                    { name: 'cleanRaaga', weight: 0.15 },
+                    { name: 'cleanThaala', weight: 0.1 },
+                    { name: 'cleanDiety', weight: 0.05 },
+                    { name: 'cleanLanaguage', weight: 0.05 },
+                    { name: 'cleanType', weight: 0.05 }
+                ];
+
+                // Map database to clean, standardized search entries behind the scenes
+                const searchableData = krithis.map(item => ({
+                    ...item,
+                    cleanName: cleanDiacritics(item.Name),
+                    cleanComposer: cleanDiacritics(item.Composer),
+                    cleanRaaga: cleanDiacritics(item.Raaga),
+                    cleanThaala: cleanDiacritics(item.Thaala),
+                    cleanDiety: cleanDiacritics(item.Diety),
+                    cleanLanaguage: cleanDiacritics(item.Lanaguage),
+                    cleanType: cleanDiacritics(item.Type)
+                }));
+
+                fuseInstance = new Fuse(searchableData, {
+                    keys: searchKeys,
+                    threshold: 0.45,       // Determines "fuzziness" (0 = exact match, 1 = matches everything). 0.45 is perfect for phonetic typos.
+                    ignoreLocation: true,  // Find matches anywhere inside strings
+                    distance: 100
+                });
+
                 displayKrithis(krithis);
             },
             error: function(err) {
@@ -461,31 +475,21 @@
         });
     }
 
-    // Dynamic Live filtering engine
+    // Intelligent fuzzy matching search event
     document.getElementById('searchBar').addEventListener('input', function(e) {
-        const searchTerm = normalizeText(e.target.value);
+        const query = e.target.value.trim();
         
-        const filtered = krithis.filter(krithi => {
-            const name = normalizeText(krithi.Name);
-            const composer = normalizeText(krithi.Composer);
-            const raaga = normalizeText(krithi.Raaga);
-            const thaala = normalizeText(krithi.Thaala);
-            const deity = normalizeText(krithi.Diety);
-            const language = normalizeText(krithi.Lanaguage);
-            const type = normalizeText(krithi.Type);
+        if (!query) {
+            displayKrithis(krithis); // Show all records if search box is empty
+            return;
+        }
 
-            return (
-                name.includes(searchTerm) ||
-                composer.includes(searchTerm) ||
-                raaga.includes(searchTerm) ||
-                thaala.includes(searchTerm) ||
-                deity.includes(searchTerm) ||
-                language.includes(searchTerm) ||
-                type.includes(searchTerm)
-            );
-        });
-        
-        displayKrithis(filtered);
+        if (fuseInstance) {
+            const cleanedQuery = cleanDiacritics(query);
+            const results = fuseInstance.search(cleanedQuery);
+            const matchingKrithis = results.map(result => result.item);
+            displayKrithis(matchingKrithis);
+        }
     });
 
     // Run database fetch
