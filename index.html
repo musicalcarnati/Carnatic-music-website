@@ -611,52 +611,114 @@
         }
     });
 
-    // --- MAPPING TABLE FOR UNEVEN AND ALTERNATIVE SPELLINGS IN GOOGLE SHEETS ---
-    // Key represents the main composer ID/Key, values represent all spelling variations on Sheets
+    // --- EXACT MAPPING TABLE FOR SPELLING VARIATIONS ---
+    // Standardizes sheet variations to the correct main composer profile.
+    // Ensure distinct composers (like Tyagaraja vs. Tiruvottriyur Tyagayya) have no overlapping aliases.
     const composerSpellingAliases = {
-        "Tyagaraja": ["tyagaraja", "thyagaraja", "thyaagaraaja", "thyaagaraja", "thyāagayya", "thyāgayya"],
-        "Muthuswami Dikshitar": ["muthuswami dikshitar", "muthuswaami dikshithar", "muthuswaami dikshitar", "dikshithar", "dikshitar"],
-        "Sadasiva Brahmendra": ["sadasiva brahmendra", "sadashiva brahmendra"],
-        "G. N. Balasubramaniam": ["g.n. balasubramaniam", "gn balasubramanian", "g.n balasubramaniam", "g.n. balasubramanyam"],
-        "Tallapaka Annamacharya": ["tallapaka annamacharya", "annamaachaarya", "annamacharya"],
-        "Bhadrachala Ramadasu": ["bhadrachala ramadasu", "bhadrachala ramadasa", "bhadraachala raama daasu"],
-        "Purandaradasa": ["purandaradasa", "purandaradaasa", "purandara dasa"],
-        "Narayana Teertha": ["narayana teertha", "narayanatheertha", "narayana tirtha"],
-        "Paidala Gurumurti Sastri": ["paidala gurumurti sastri", "paidala gurumurti shastri", "gurumurti sastri"],
-        "Swathi Thirunal": ["swathi thirunal", "maharaaja swathi thirunal raama varma", "swathi thirunal rama varma", "maharaaja swathi thirunal"],
-        "Oottukkadu Venkata Kavi": ["oottukkadu venkata kavi", "ootthukaadu ventaka subbaiyyer", "ootthukkadu venkata kavi"],
-        "Syama Sastri": ["syama sastri", "shyaama shaasthri", "shyaama shaashtri", "shyama shastri"],
-        "Veena Kuppayyar": ["veena kuppayyar", "veenai kuppayyar"],
-        "Manambuchavadi Venkatasubbayyar", ["manambuchavadi venkatasubbayyar", "mānambuccāvaḍi venkaṭa subbayyar"],
-        "Patnam Subramania Iyer": ["patnam subramania iyer", "patnam subramanyam iyer", "patnam subramaniam iyer"],
-        "Kotthavaasal Venkatarama Ayyar": ["kotthavaasal venkatarama ayyar", "kottavāsal venkatarāmaiyer"],
-        "Tiruvottriyur Tyagayya": ["tiruvottriyur tyagayya", "thiruvoṟṟiyūr thyāagayya", "thiruvoṟṟiyūr thyāgayya"],
-        "Pacchimiriam Adiyappa": ["pacchimiriam adiyappa", "pacchimariyam addiyappa"],
-        "Lalgudi Jayaraman": ["lalgudi jayararaman", "laalgudi jayaraman", "lalgudi jayaraman"],
-        "Muthiah Bhagavatar": ["muthiah bhagavatar", "mutthiah bhaagavathar"],
-        "Tiger Varadachariar": ["tiger varadachariar", "tiger varadhacharier"],
-        "Kanakadasa": ["kanakadasa", "kanakadaasa"],
-        "Papanasam Sivan": ["papanasam sivan", "paapanasham shivan"],
-        "Mysore Vasudevacharya": ["mysore vasudevacharya", "mysore vaasudevacharya"],
-        "Mayuram Viswanatha Sastri": ["mayuram viswanatha sastri", "mayooram vishvanaatha shasthri"]
+        "Tyagaraja": [
+            "tyagaraja", "thyagaraja", "thyaagaraaja", "thyaagaraja", "tyāgarāja"
+        ],
+        "Tiruvottriyur Tyagayya": [
+            "tiruvottriyur tyagayya", "thiruvoṟṟiyūr thyāagayya", "thiruvoṟṟiyūr thyāgayya", 
+            "thyāagayya", "thyāgayya", "thiruvottriyur thyagayya"
+        ],
+        "Muthuswami Dikshitar": [
+            "muthuswami dikshitar", "muthuswaami dikshithar", "muthuswaami dikshitar", "muthuswami dikshithar"
+        ],
+        "Ramaswami Dikshitar": [
+            "ramaswami dikshitar", "ramaswaami dikshithar", "ramaswami dikshithar"
+        ],
+        "Subbarama Dikshitar": [
+            "subbarama dikshitar", "subbarama dikshithar", "subbaraama dikshithar"
+        ],
+        "Sadasiva Brahmendra": [
+            "sadasiva brahmendra", "sadashiva brahmendra", "sadaasiva brahmendra"
+        ],
+        "G. N. Balasubramaniam": [
+            "g.n. balasubramaniam", "gn balasubramanian", "g.n balasubramaniam", "g.n. balasubramanyam", "g.n balasubramanian"
+        ],
+        "Tallapaka Annamacharya": [
+            "tallapaka annamacharya", "annamaachaarya", "annamacharya", "annamaacharya/purandaradaasa"
+        ],
+        "Bhadrachala Ramadasu": [
+            "bhadrachala ramadasu", "bhadrachala ramadasa", "bhadraachala raama daasu"
+        ],
+        "Purandaradasa": [
+            "purandaradaasa", "purandara dasa", "purandaradaasa/annamaachaarya", "annamaachaarya/purandaradaasa"
+        ],
+        "Narayana Teertha": [
+            "narayana teertha", "narayanatheertha", "narayana tirtha"
+        ],
+        "Paidala Gurumurti Sastri": [
+            "paidala gurumurti sastri", "paidala gurumurti shastri", "gurumurti sastri"
+        ],
+        "Swathi Thirunal": [
+            "swathi thirunal", "maharaaja swathi thirunal raama varma", "swathi thirunal rama varma", "maharaaja swathi thirunal"
+        ],
+        "Oottukkadu Venkata Kavi": [
+            "oottukkadu venkata kavi", "ootthukaadu ventaka subbaiyyer", "ootthukkadu venkata kavi", "ootthukaadu venkata subbayer"
+        ],
+        "Syama Sastri": [
+            "syama sastri", "shyaama shaasthri", "shyaama shaashtri", "shyama shastri"
+        ],
+        "Veena Kuppayyar": [
+            "veena kuppayyar", "veenai kuppayyar"
+        ],
+        "Manambuchavadi Venkatasubbayyar": [
+            "manambuchavadi venkatasubbayyar", "mānambuccāvaḍi venkaṭa subbayyar", "manambuccavadi venkata subbayyar"
+        ],
+        "Patnam Subramania Iyer": [
+            "patnam subramania iyer", "patnam subramanyam iyer", "patnam subramaniam iyer"
+        ],
+        "Kotthavaasal Venkatarama Ayyar": [
+            "kotthavaasal venkatarama ayyar", "kottavāsal venkatarāmaiyer", "kottavasal venkataramaiyer"
+        ],
+        "Pacchimiriam Adiyappa": [
+            "pacchimiriam adiyappa", "pacchimariyam addiyappa"
+        ],
+        "Lalgudi Jayaraman": [
+            "lalgudi jayararaman", "laalgudi jayaraman", "lalgudi jayaraman"
+        ],
+        "Muthiah Bhagavatar": [
+            "muthiah bhagavatar", "mutthiah bhaagavathar", "muthiah bhaagavathar"
+        ],
+        "Tiger Varadachariar": [
+            "tiger varadachariar", "tiger varadhacharier"
+        ],
+        "Kanakadasa": [
+            "kanakadasa", "kanakadaasa"
+        ],
+        "Papanasam Sivan": [
+            "papanasam sivan", "paapanasham shivan"
+        ],
+        "Mysore Vasudevacharya": [
+            "mysore vasudevacharya", "mysore vaasudevacharya"
+        ],
+        "Mayuram Viswanatha Sastri": [
+            "mayuram viswanatha sastri", "mayooram vishvanaatha shasthri"
+        ]
     };
 
-    // Helper function to check if sheet name matches main composer profile dynamically
+    // --- STRICT COMPOSER MATCHING LOGIC ---
+    // Normalizes strings by stripping diacritics and matches strictly (no loose substrings).
     function isComposerMatch(sheetComposerName, mainComposerName) {
         if (!sheetComposerName) return false;
-        const cleanSheet = sheetComposerName.trim().toLowerCase();
-        const cleanMain = mainComposerName.trim().toLowerCase();
         
-        // Exact case-insensitive match
-        if (cleanSheet.includes(cleanMain) || cleanMain.includes(cleanSheet)) {
+        // Clean both strings completely (lowercase, strip diacritics like ā -> a, ṟ -> r)
+        const cleanSheet = cleanDiacritics(sheetComposerName);
+        const cleanMain = cleanDiacritics(mainComposerName);
+        
+        // 1. Check for exact match after cleaning
+        if (cleanSheet === cleanMain) {
             return true;
         }
         
-        // Match using the aliases defined above
+        // 2. Check for exact matches inside the specific alias list for this composer
         const aliases = composerSpellingAliases[mainComposerName];
         if (aliases) {
-            return aliases.some(alias => cleanSheet.includes(alias) || alias.includes(cleanSheet));
+            return aliases.some(alias => cleanDiacritics(alias) === cleanSheet);
         }
+        
         return false;
     }
 
