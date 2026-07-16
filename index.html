@@ -434,6 +434,10 @@
         Papa.parse(sheetCsvUrl, {
             download: true,
             header: true,
+            // Clean up header fields automatically to prevent hidden space bugs
+            transformHeader: function(header) {
+                return header.trim();
+            },
             complete: function(results) {
                 krithis = results.data.filter(row => row.Name);
                 
