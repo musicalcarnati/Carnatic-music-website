@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XXX - Carnatic Music Portal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #802b00;
+            --secondary-color: #b37446;
+            --bg-color: #f7f3eb;
+            --card-bg: #ffffff;
+            --text-dark: #2b2b2b;
+            --border-color: #eedecb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Navigation Header Dashboard */
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        nav {
+            display: flex;
+            gap: 5px;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: #f7f3eb;
+            padding: 10px 15px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-btn.active {
+            background-color: var(--secondary-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Main Content Area */
+        .main-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+
+        /* Views management (showing/hiding tabs) */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Home Page Styles */
+        .hero-section {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .hero-section h2 {
+            color: var(--primary-color);
+            font-size: 32px;
+            margin-top: 0;
+        }
+
+        .hero-section p {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #555;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        .trinity-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-top: 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border: 4px solid white;
+        }
+
+        /* Compositions Search Page Styles */
+        .search-box {
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 16px;
+            border: 2px solid var(--secondary-color);
+            border-radius: 30px;
+            box-sizing: border-box;
+            margin-bottom: 25px;
+            outline: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .search-box:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 10px rgba(128,43,0,0.15);
+        }
+
+        .krithi-card {
+            background: var(--card-bg);
+            padding: 22px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+            border-left: 6px solid var(--primary-color);
+            position: relative;
+        }
+
+        .krithi-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0 0 6px 0;
+        }
+
+        .composer-name {
+            font-size: 16px;
+            color: #555;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .meta-item {
+            font-size: 14px;
+            background: #fdfaf4;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .meta-item strong {
+            color: #662200;
+        }
+
+        .type-badge {
+            position: absolute;
+            top: 22px;
+            right: 22px;
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .notation-section {
+            border-top: 1px dashed var(--border-color);
+            padding-top: 12px;
+            margin-top: 12px;
+        }
+
+        .view-btn {
+            display: inline-block;
+            background: var(--secondary-color);
+            color: white;
+            text-decoration: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .view-btn:hover {
+            background: var(--primary-color);
+        }
+
+        #no-results {
+            text-align: center;
+            color: #777;
+            font-style: italic;
+            margin-top: 30px;
+            font-size: 18px;
+        }
+
+        /* Blank Placeholder Tab Styles */
+        .placeholder-tab {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid var(--border-color);
+        }
+
+        .placeholder-tab h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        /* Responsive adjustments */
+        @media(max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .nav-btn {
+                font-size: 13px;
+                padding: 8px 10px;
+            }
+        }
+
+        @media(max-width: 600px) {
+            .type-badge {
+                position: static;
+                display: inline-block;
+                margin-bottom: 10px;
+            }
+            .meta-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-container">
+        <div class="logo" id="home-logo-btn" style="cursor: pointer;" onclick="switchTab('home')">XXX</div>
+        <nav>
+            <button class="nav-btn active" id="btn-home" onclick="switchTab('home')">Home</button>
+            <button class="nav-btn" id="btn-compositions" onclick="switchTab('compositions')">Compositions</button>
+            <button class="nav-btn" id="btn-courses" onclick="switchTab('courses')">Courses</button>
+            <button class="nav-btn" id="btn-syllabus" onclick="switchTab('syllabus')">Syllabus</button>
+            <button class="nav-btn" id="btn-composers" onclick="switchTab('composers')">Composers</button>
+            <button class="nav-btn" id="btn-raagas" onclick="switchTab('raagas')">Raagas</button>
+            <button class="nav-btn" id="btn-theory" onclick="switchTab('theory')">Theory</button>
+        </nav>
+    </div>
+</header>
+
+<div class="main-container">
+
+    <div id="home" class="tab-content active">
+        <div class="hero-section">
+            <h2>Welcome to XXX</h2>
+            <p>The extensive website where you can find everything you need to know about Carnatic Music.</p>
+            <img class="trinity-image" src="Carnatic Trinity.JPG" alt="The Carnatic Music Trinity - Tyagaraja, Muthuswami Dikshitar, Syama Sastri">
+        </div>
+    </div>
+
+    <div id="compositions" class="tab-content">
+        <input type="text" id="searchBar" class="search-box" placeholder="Search by Song Name, Raaga, Composer, Deity, Language, or Type...">
+        <div id="directory">Loading database...</div>
+        <div id="no-results" style="display: none;">No compositions match your search terms.</div>
+    </div>
+
+    <div id="courses" class="tab-content">
+        <div class="placeholder-tab">
+            <h2>Courses</h2>
+            <p>Dashboard View: This page is ready for custom layouts when courses are published.</p>
+        </div>
+    </div>
+
+    <div id="syllabus" class="tab-content">
+        <div class="placeholder-tab">
+            <h2>Syllabus</h2>
+            <p>Dashboard View: This page is ready to structure exams, performance guides, or lesson paths.</p>
+        </div>
+    </div>
+
+    <div id="composers" class="tab-content">
+        <div class="placeholder-tab">
+            <h2>Composers</h2>
+            <p>Dashboard View: This page is ready to show profiles and biographies of legends.</p>
+        </div>
+    </div>
+
+    <div id="raagas" class="tab-content">
+        <div class="placeholder-tab">
+            <h2>Raagas</h2>
+            <p>Dashboard View: This page is ready to explore scales, arohana-avarohana details, and structures.</p>
+        </div>
+    </div>
+
+    <div id="theory" class="tab-content">
+        <div class="placeholder-tab">
+            <h2>Theory</h2>
+            <p>Dashboard View: This page is ready for articles, lakshana grandhas, and analytical details.</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Tab switching engine
+    function switchTab(tabId) {
+        // Hide all tab content
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(content => content.classList.remove('active'));
+
+        // Remove active styling from all buttons
+        const buttons = document.querySelectorAll('.nav-btn');
+        buttons.forEach(button => button.classList.remove('active'));
+
+        // Show selected tab content
+        const targetContent = document.getElementById(tabId);
+        if (targetContent) {
+            targetContent.classList.add('active');
+        }
+
+        // Add active style to matching button
+        const targetButton = document.getElementById('btn-' + tabId);
+        if (targetButton) {
+            targetButton.classList.add('active');
+        }
+    }
+
+    // Live Google Sheet Database Configuration
+    const sheetCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTK6h64L1-UuFhqNq2fWM0NHlPJT-d2zEDdXLi6ZE_iRR0K2pFRb5WLzEAyjIsSLbEgkOiFHh6RNZt0/pub?output=csv'; 
+    let krithis = [];
+
+    // Normalization logic for smart alias search (handles spellings, diacritics, etc.)
+    function normalizeText(text) {
+        if (!text) return '';
+        let normalized = text.toString().toLowerCase();
+        
+        normalized = normalized.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        normalized = normalized.replace(/[ṟṟ]/g, 'r').replace(/[āā]/g, 'a');
+
+        normalized = normalized.replace(/hamsadhwani/g, 'hamsadhvani');
+        normalized = normalized.replace(/shyaama/g, 'syama');
+        normalized = normalized.replace(/shaasthri/g, 'sastri');
+        normalized = normalized.replace(/shastri/g, 'sastri');
+        normalized = normalized.replace(/thyaagaraaja/g, 'tyagaraja');
+        normalized = normalized.replace(/thyaagaraja/g, 'tyagaraja');
+        normalized = normalized.replace(/thyāagayya/g, 'thyagayya');
+        normalized = normalized.replace(/aadhi/g, 'adi');
+        normalized = normalized.replace(/aadi/g, 'adi');
+        
+        return normalized.trim();
+    }
+
+    function loadData() {
+        Papa.parse(sheetCsvUrl, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                krithis = results.data.filter(row => row.Name); 
+                displayKrithis(krithis);
+            },
+            error: function(err) {
+                document.getElementById('directory').innerText = "Error loading database. Please check your URL configurations.";
+                console.error(err);
+            }
+        });
+    }
+
+    function displayKrithis(data) {
+        const directory = document.getElementById('directory');
+        directory.innerHTML = '';
+        
+        if(data.length === 0) {
+            document.getElementById('no-results').style.display = 'block';
+            return;
+        } else {
+            document.getElementById('no-results').style.display = 'none';
+        }
+
+        data.forEach(krithi => {
+            const card = document.createElement('div');
+            card.className = 'krithi-card';
+            
+            const deity = (krithi.Diety && krithi.Diety !== 'NA') ? krithi.Diety : 'General';
+            const language = (krithi.Lanaguage && krithi.Lanaguage !== 'NA') ? krithi.Lanaguage : 'N/A';
+            const type = krithi.Type || 'Composition';
+
+            card.innerHTML = `
+                <div class="type-badge">${type}</div>
+                <div class="krithi-title">${krithi.Name}</div>
+                <div class="composer-name">by ${krithi.Composer || 'Unknown Composer'}</div>
+                
+                <div class="meta-grid">
+                    <div class="meta-item"><strong>Raaga:</strong> ${krithi.Raaga || 'N/A'}</div>
+                    <div class="meta-item"><strong>Thaala:</strong> ${krithi.Thaala || 'N/A'}</div>
+                    <div class="meta-item"><strong>Deity:</strong> ${deity}</div>
+                    <div class="meta-item"><strong>Language:</strong> ${language}</div>
+                </div>
+                
+                <div class="notation-section">
+                    ${krithi.Notation ? `<a href="${krithi.Notation}" target="_blank" class="view-btn">View Notation</a>` : '<em style="color:#888; font-size:13px;">Notation coming soon</em>'}
+                </div>
+            `;
+            directory.appendChild(card);
+        });
+    }
+
+    // Dynamic Live filtering engine
+    document.getElementById('searchBar').addEventListener('input', function(e) {
+        const searchTerm = normalizeText(e.target.value);
+        
+        const filtered = krithis.filter(krithi => {
+            const name = normalizeText(krithi.Name);
+            const composer = normalizeText(krithi.Composer);
+            const raaga = normalizeText(krithi.Raaga);
+            const thaala = normalizeText(krithi.Thaala);
+            const deity = normalizeText(krithi.Diety);
+            const language = normalizeText(krithi.Lanaguage);
+            const type = normalizeText(krithi.Type);
+
+            return (
+                name.includes(searchTerm) ||
+                composer.includes(searchTerm) ||
+                raaga.includes(searchTerm) ||
+                thaala.includes(searchTerm) ||
+                deity.includes(searchTerm) ||
+                language.includes(searchTerm) ||
+                type.includes(searchTerm)
+            );
+        });
+        
+        displayKrithis(filtered);
+    });
+
+    // Run database fetch
+    loadData();
+</script>
+
+</body>
+</html>
