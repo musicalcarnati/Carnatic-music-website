@@ -14,6 +14,8 @@
             --card-bg: #ffffff;
             --text-dark: #2b2b2b;
             --border-color: #eedecb;
+            --accent-blue: #2a5c91;
+            --accent-green: #2e6f40;
         }
 
         body {
@@ -209,26 +211,58 @@
             letter-spacing: 0.5px;
         }
 
+        /* Buttons Layout Flexbox */
         .notation-section {
             border-top: 1px dashed var(--border-color);
-            padding-top: 12px;
-            margin-top: 12px;
+            padding-top: 15px;
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .view-btn {
             display: inline-block;
-            background: var(--secondary-color);
             color: white;
             text-decoration: none;
-            padding: 8px 18px;
+            padding: 8px 16px;
             border-radius: 6px;
             font-weight: bold;
-            font-size: 14px;
-            transition: background 0.2s;
+            font-size: 13px;
+            transition: background 0.2s, transform 0.1s;
+            text-align: center;
         }
 
-        .view-btn:hover {
+        .view-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Styling individual dynamic buttons */
+        .btn-notation {
+            background: var(--secondary-color);
+        }
+        .btn-notation:hover {
             background: var(--primary-color);
+        }
+
+        .btn-detailed {
+            background: var(--accent-blue);
+        }
+        .btn-detailed:hover {
+            background: #1c3f66;
+        }
+
+        .btn-lyrics {
+            background: var(--accent-green);
+        }
+        .btn-lyrics:hover {
+            background: #1f4f2d;
+        }
+
+        .coming-soon-text {
+            color: #888;
+            font-style: italic;
+            font-size: 13px;
         }
 
         #no-results {
@@ -254,7 +288,7 @@
             margin-top: 0;
         }
 
-        /* Responsive adjustments */
+        /* Responsive design */
         @media(max-width: 768px) {
             .header-container {
                 flex-direction: column;
@@ -278,6 +312,13 @@
             }
             .meta-grid {
                 grid-template-columns: 1fr 1fr;
+            }
+            .notation-section {
+                flex-direction: column;
+            }
+            .view-btn {
+                width: 100%;
+                box-sizing: border-box;
             }
         }
     </style>
@@ -452,6 +493,29 @@
             const language = (krithi.Lanaguage && krithi.Lanaguage !== 'NA') ? krithi.Lanaguage : 'N/A';
             const type = krithi.Type || 'Composition';
 
+            // Safe fetch values from standard and newly added columns
+            const notationLink = krithi.Notation ? krithi.Notation.trim() : '';
+            const detailedLink = krithi.DetailedNotation ? krithi.DetailedNotation.trim() : '';
+            const lyricsLink = krithi.Lyrics ? krithi.Lyrics.trim() : '';
+
+            // Generate HTML for buttons dynamically based on what data is present in the row
+            let buttonsHTML = '';
+            
+            if (notationLink && notationLink !== 'NA' && notationLink !== '') {
+                buttonsHTML += `<a href="${notationLink}" target="_blank" class="view-btn btn-notation">Notation</a>`;
+            }
+            if (detailedLink && detailedLink !== 'NA' && detailedLink !== '') {
+                buttonsHTML += `<a href="${detailedLink}" target="_blank" class="view-btn btn-detailed">Detailed Notation</a>`;
+            }
+            if (lyricsLink && lyricsLink !== 'NA' && lyricsLink !== '') {
+                buttonsHTML += `<a href="${lyricsLink}" target="_blank" class="view-btn btn-lyrics">Lyrics</a>`;
+            }
+
+            // If absolutely no resources exist yet, output a tiny placeholder
+            if (!buttonsHTML) {
+                buttonsHTML = '<span class="coming-soon-text">Resources coming soon</span>';
+            }
+
             card.innerHTML = `
                 <div class="type-badge">${type}</div>
                 <div class="krithi-title">${krithi.Name}</div>
@@ -465,7 +529,7 @@
                 </div>
                 
                 <div class="notation-section">
-                    ${krithi.Notation ? `<a href="${krithi.Notation}" target="_blank" class="view-btn">View Notation</a>` : '<em style="color:#888; font-size:13px;">Notation coming soon</em>'}
+                    ${buttonsHTML}
                 </div>
             `;
             directory.appendChild(card);
