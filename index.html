@@ -549,6 +549,51 @@
             font-weight: 600;
         }
 
+        /* Detail page tabs (raaga & composer profiles) */
+        .detail-tab {
+            display: none;
+        }
+        .detail-tab.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .song-row {
+            background: #fdfaf4;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+        .song-row-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .song-row-name {
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+        .song-row-sub {
+            font-size: 13px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .song-type-tag {
+            background: var(--accent-green);
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 10px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
         /* Responsive design */
         @media(max-width: 768px) {
             .header-container {
@@ -658,10 +703,18 @@
             <div class="hero-section" style="text-align: left;">
                 <h2 id="detail-composer-name" style="margin-bottom: 5px;"></h2>
                 <p id="detail-composer-timeline" style="font-style: italic; color: #666; margin-top: 0;"></p>
-                <div id="detail-composer-bio" style="font-size: 16px; line-height: 1.6; color: #333; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 15px;"></div>
-                
-                <h3 style="color: var(--primary-color); margin-top: 30px; border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">Compositions on This Website</h3>
-                <div id="detail-composer-songs" style="margin-top: 15px;"></div>
+
+                <div class="doc-control-bar" id="composer-detail-tabbar" style="margin-top: 20px;">
+                    <button class="doc-btn active-doc" onclick="switchDetailTab('composer', 'bio', this)">Biography</button>
+                    <button class="doc-btn" onclick="switchDetailTab('composer', 'songs', this)">Compositions on This Website</button>
+                </div>
+
+                <div id="composer-tab-bio" class="detail-tab active">
+                    <div id="detail-composer-bio" style="font-size: 16px; line-height: 1.6; color: #333; margin-top: 15px;"></div>
+                </div>
+                <div id="composer-tab-songs" class="detail-tab">
+                    <div id="detail-composer-songs" style="margin-top: 15px;"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -772,13 +825,21 @@
                     </div>
                 </div>
 
-                <div id="detail-raaga-phrases-wrap" style="margin-top: 10px;">
-                    <h3 style="color: var(--primary-color); margin-top: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">Common Phrases</h3>
-                    <p id="detail-raaga-phrases" style="font-size: 15px; line-height: 1.6; color: #333;"></p>
+                <div class="doc-control-bar" id="raaga-detail-tabbar" style="margin-top: 20px;">
+                    <button class="doc-btn active-doc" onclick="switchDetailTab('raaga', 'description', this)">Raaga Description</button>
+                    <button class="doc-btn" onclick="switchDetailTab('raaga', 'phrases', this)">Raaga Phrases</button>
+                    <button class="doc-btn" onclick="switchDetailTab('raaga', 'songs', this)">Compositions on This Website</button>
                 </div>
 
-                <h3 style="color: var(--primary-color); margin-top: 30px; border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">Compositions on This Website</h3>
-                <div id="detail-raaga-songs" style="margin-top: 15px;"></div>
+                <div id="raaga-tab-description" class="detail-tab active">
+                    <div id="detail-raaga-description" style="font-size: 15px; line-height: 1.6; color: #333; margin-top: 15px;"></div>
+                </div>
+                <div id="raaga-tab-phrases" class="detail-tab">
+                    <div id="detail-raaga-phrases" style="font-size: 15px; line-height: 1.6; color: #333; margin-top: 15px;"></div>
+                </div>
+                <div id="raaga-tab-songs" class="detail-tab">
+                    <div id="detail-raaga-songs" style="margin-top: 15px;"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -1893,6 +1954,80 @@
         });
     }
 
+    // --- SHARED DETAIL-PAGE TAB SWITCHING (used by both Composer and Raaga profiles) ---
+    function switchDetailTab(prefix, tabKey, btnElement) {
+        document.querySelectorAll(`[id^="${prefix}-tab-"]`).forEach(el => el.classList.remove('active'));
+        document.getElementById(`${prefix}-tab-${tabKey}`).classList.add('active');
+
+        const bar = document.getElementById(`${prefix}-detail-tabbar`);
+        bar.querySelectorAll('.doc-btn').forEach(b => b.classList.remove('active-doc'));
+        if (btnElement) {
+            btnElement.classList.add('active-doc');
+        } else {
+            bar.querySelector('.doc-btn').classList.add('active-doc');
+        }
+    }
+
+    function resetDetailTabs(prefix, defaultTabKey) {
+        const bar = document.getElementById(`${prefix}-detail-tabbar`);
+        switchDetailTab(prefix, defaultTabKey, bar.querySelector('.doc-btn'));
+    }
+
+    // --- COMPOSITION TYPE PRIORITY (Krithi first, then Varnam, then Keerthana, then everything else) ---
+    function typePriorityIndex(rawType) {
+        const t = cleanDiacritics(rawType || '');
+        if (t.startsWith('krithi') || t.startsWith('kriti') || t.startsWith('kirthi')) return 0;
+        if (t.startsWith('varnam')) return 1;
+        if (t.startsWith('keerthan') || t.startsWith('kirtan') || t.startsWith('keertan')) return 2;
+        return 3;
+    }
+
+    function sortSongsByType(songs) {
+        return [...songs].sort((a, b) => {
+            const pa = typePriorityIndex(a.Type), pb = typePriorityIndex(b.Type);
+            if (pa !== pb) return pa - pb;
+            return (a.Name || '').localeCompare(b.Name || '');
+        });
+    }
+
+    // Shared song-list renderer for both profile types.
+    // mode 'raaga'    -> secondary line shows the composer (used on a raaga's page)
+    // mode 'composer' -> secondary line shows the raaga (used on a composer's page)
+    // Both modes always show Thaala and the composition Type as a badge.
+    function renderSongList(container, songs, mode) {
+        container.innerHTML = '';
+
+        if (songs.length === 0) {
+            const noun = mode === 'raaga' ? 'raaga' : 'composer';
+            container.innerHTML = `<p class="coming-soon-text">No compositions loaded in the database for this ${noun} yet.</p>`;
+            return;
+        }
+
+        sortSongsByType(songs).forEach(song => {
+            const row = document.createElement('div');
+            row.className = 'song-row';
+
+            const secondary = mode === 'raaga'
+                ? `by ${song.Composer || 'Unknown Composer'}`
+                : `Raaga: ${song.Raaga || 'N/A'}`;
+
+            row.innerHTML = `
+                <div class="song-row-top">
+                    <span class="song-row-name">${song.Name}</span>
+                    <span class="song-type-tag">${song.Type || 'Composition'}</span>
+                </div>
+                <div class="song-row-sub">${secondary} · Thaala: ${song.Thaala || 'N/A'}</div>
+            `;
+            row.onclick = () => {
+                switchTab('compositions');
+                const searchBar = document.getElementById('searchBar');
+                searchBar.value = song.Name;
+                searchBar.dispatchEvent(new Event('input'));
+            };
+            container.appendChild(row);
+        });
+    }
+
     function showComposerProfile(composer) {
         document.getElementById('composer-directory-view').style.display = 'none';
         document.getElementById('composer-detail-view').style.display = 'block';
@@ -1901,33 +2036,13 @@
         document.getElementById('detail-composer-timeline').innerText = composer.timeline;
         document.getElementById('detail-composer-bio').innerText = composer.bio;
 
-        const songContainer = document.getElementById('detail-composer-songs');
-        songContainer.innerHTML = '';
-
-        // Dynamic multi-spelling mapping filtering
-        const matchedSongs = krithis.filter(song => 
+        const matchedSongs = krithis.filter(song =>
             isComposerMatch(song.Composer, composer.name)
         );
+        renderSongList(document.getElementById('detail-composer-songs'), matchedSongs, 'composer');
 
-        if (matchedSongs.length === 0) {
-            songContainer.innerHTML = '<p class="coming-soon-text">No compositions loaded in the database for this composer yet.</p>';
-        } else {
-            matchedSongs.forEach(song => {
-                const songLink = document.createElement('div');
-                songLink.style.cssText = "background: #fdfaf4; padding: 10px 15px; margin-bottom: 8px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; cursor: pointer;";
-                songLink.innerHTML = `
-                    <span style="font-weight: 500; color: var(--primary-color);">${song.Name}</span>
-                    <span style="font-size: 13px; color: #666;">Raaga: ${song.Raaga || 'N/A'}</span>
-                `;
-                songLink.onclick = () => {
-                    switchTab('compositions');
-                    const searchBar = document.getElementById('searchBar');
-                    searchBar.value = song.Name;
-                    searchBar.dispatchEvent(new Event('input'));
-                };
-                songContainer.appendChild(songLink);
-            });
-        }
+        resetDetailTabs('composer', 'bio');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function backToComposerList() {
@@ -2139,6 +2254,16 @@
         if (raaga) showRaagaProfile(raaga);
     }
 
+    function buildAutoRaagaDescription(raaga) {
+        let sentence;
+        if (raaga.isMelakartha) {
+            sentence = `${raaga.name} is Melakartha Raaga #${raaga.melaNumber}, belonging to the ${raaga.chakraName} Chakra. As a Janaka raaga, it uses all seven swaras, in standard order, in both its Arohana and Avarohana.`;
+        } else {
+            sentence = `${raaga.name} is a Janya raaga of ${raaga.parentMelakartha} (Melakartha #${raaga.melaNumber}), classified by swara count as ${raaga.swaraClass}${raaga.classification ? `, and by structure as a ${raaga.classification} raaga` : ''}.`;
+        }
+        return sentence;
+    }
+
     function showRaagaProfile(raaga) {
         document.getElementById('raagas-landing-view').style.display = 'none';
         document.getElementById('raaga-detail-view').style.display = 'block';
@@ -2167,35 +2292,31 @@
         document.getElementById('detail-raaga-arohana').innerText = raaga.arohana.replaceAll('-', '  ');
         document.getElementById('detail-raaga-avarohana').innerText = raaga.avarohana.replaceAll('-', '  ');
 
-        const phrasesEl = document.getElementById('detail-raaga-phrases');
-        phrasesEl.innerText = raaga.commonPhrases ? raaga.commonPhrases : 'Common phrases for this raaga haven\'t been added yet.';
-        phrasesEl.className = raaga.commonPhrases ? '' : 'coming-soon-text';
-
-        const songContainer = document.getElementById('detail-raaga-songs');
-        songContainer.innerHTML = '';
-
-        const matchedSongs = krithis.filter(song => isRaagaMatch(song.Raaga, raaga));
-
-        if (matchedSongs.length === 0) {
-            songContainer.innerHTML = '<p class="coming-soon-text">No compositions loaded in the database for this raaga yet.</p>';
+        // Description tab: use a written description if one has been added; otherwise
+        // fall back to a factual auto-generated summary from the structured data.
+        const descEl = document.getElementById('detail-raaga-description');
+        if (raaga.description) {
+            descEl.innerHTML = `<p>${raaga.description}</p>`;
         } else {
-            matchedSongs.forEach(song => {
-                const songLink = document.createElement('div');
-                songLink.style.cssText = "background: #fdfaf4; padding: 10px 15px; margin-bottom: 8px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; cursor: pointer;";
-                songLink.innerHTML = `
-                    <span style="font-weight: 500; color: var(--primary-color);">${song.Name}</span>
-                    <span style="font-size: 13px; color: #666;">by ${song.Composer || 'Unknown'}</span>
-                `;
-                songLink.onclick = () => {
-                    switchTab('compositions');
-                    const searchBar = document.getElementById('searchBar');
-                    searchBar.value = song.Name;
-                    searchBar.dispatchEvent(new Event('input'));
-                };
-                songContainer.appendChild(songLink);
-            });
+            descEl.innerHTML = `
+                <p>${buildAutoRaagaDescription(raaga)}</p>
+                <p class="coming-soon-text" style="margin-top: 10px;">A fuller written description for this raaga hasn't been added yet.</p>
+            `;
         }
 
+        // Phrases tab
+        const phrasesEl = document.getElementById('detail-raaga-phrases');
+        if (raaga.commonPhrases) {
+            phrasesEl.innerHTML = `<p>${raaga.commonPhrases}</p>`;
+        } else {
+            phrasesEl.innerHTML = `<p class="coming-soon-text">Common phrases for this raaga haven't been added yet.</p>`;
+        }
+
+        // Compositions tab
+        const matchedSongs = krithis.filter(song => isRaagaMatch(song.Raaga, raaga));
+        renderSongList(document.getElementById('detail-raaga-songs'), matchedSongs, 'raaga');
+
+        resetDetailTabs('raaga', 'description');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
